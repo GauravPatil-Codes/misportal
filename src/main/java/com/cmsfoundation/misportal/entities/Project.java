@@ -301,6 +301,34 @@ class Budget {
     
     // Default constructor
     public Budget() {}
+
+	// (Optional) Getters
+	public Double getHumanResourcesCost() { return humanResourcesCost; }
+	public Double getAdminCost() { return adminCost; }
+	public Double getManagementAndCoordinationCost() { return managementAndCoordinationCost; }
+	public Double getMiscellaneousCost() { return miscellaneousCost; }
+	public Double getGovernmentConvergenceCost() { return governmentConvergenceCost; }
+	public Double getTotalBudget() { return totalBudget; }
+
+	// (Optional) Setters if you want to populate data
+	public void setHumanResourcesCost(Double humanResourcesCost) { this.humanResourcesCost = humanResourcesCost; }
+	public void setAdminCost(Double adminCost) { this.adminCost = adminCost; }
+	public void setManagementAndCoordinationCost(Double managementAndCoordinationCost) { this.managementAndCoordinationCost = managementAndCoordinationCost; }
+	public void setMiscellaneousCost(Double miscellaneousCost) { this.miscellaneousCost = miscellaneousCost; }
+	public void setGovernmentConvergenceCost(Double governmentConvergenceCost) { this.governmentConvergenceCost = governmentConvergenceCost; }
+	public void setTotalBudget(Double totalBudget) { this.totalBudget = totalBudget; }
+
+	@Override
+	public String toString() {
+		return "Budget{" +
+				"humanResourcesCost=" + humanResourcesCost +
+				", adminCost=" + adminCost +
+				", managementAndCoordinationCost=" + managementAndCoordinationCost +
+				", miscellaneousCost=" + miscellaneousCost +
+				", governmentConvergenceCost=" + governmentConvergenceCost +
+				", totalBudget=" + totalBudget +
+				'}';
+	}
 }
 
 @Embeddable
@@ -334,6 +362,43 @@ class BudgetAllocationMatrix {
     
     // Default constructor
     public BudgetAllocationMatrix() {}
+
+	// Getters
+	public String getSrNo() { return srNo; }
+	public String getDescription() { return description; }
+	public Integer getUnit() { return unit; }
+	public Integer getUnitCost() { return unitCost; }
+	public Integer getQuantity() { return quantity; }
+	public Integer getCmsContri() { return cmsContri; }
+	public Integer getNgoContri() { return ngoContri; }
+	public Integer getBeneficiaryContri() { return beneficiaryContri; }
+	public Integer getGovernmentContri() { return governmentContri; }
+
+	// Setters
+	public void setSrNo(String srNo) { this.srNo = srNo; }
+	public void setDescription(String description) { this.description = description; }
+	public void setUnit(Integer unit) { this.unit = unit; }
+	public void setUnitCost(Integer unitCost) { this.unitCost = unitCost; }
+	public void setQuantity(Integer quantity) { this.quantity = quantity; }
+	public void setCmsContri(Integer cmsContri) { this.cmsContri = cmsContri; }
+	public void setNgoContri(Integer ngoContri) { this.ngoContri = ngoContri; }
+	public void setBeneficiaryContri(Integer beneficiaryContri) { this.beneficiaryContri = beneficiaryContri; }
+	public void setGovernmentContri(Integer governmentContri) { this.governmentContri = governmentContri; }
+
+	@Override
+	public String toString() {
+		return "BudgetAllocationMatrix{" +
+				"srNo='" + srNo + '\'' +
+				", description='" + description + '\'' +
+				", unit=" + unit +
+				", unitCost=" + unitCost +
+				", quantity=" + quantity +
+				", cmsContri=" + cmsContri +
+				", ngoContri=" + ngoContri +
+				", beneficiaryContri=" + beneficiaryContri +
+				", governmentContri=" + governmentContri +
+				'}';
+	}
 }
 
 @Embeddable
@@ -343,6 +408,16 @@ class WorkPlan {
     
     // Default constructor
     public WorkPlan() {}
+
+	public String getWorkPlanDetails() { return workPlanDetails; }
+	public void setWorkPlanDetails(String workPlanDetails) { this.workPlanDetails = workPlanDetails; }
+
+	@Override
+	public String toString() {
+		return "WorkPlan{" +
+				"workPlanDetails='" + workPlanDetails + '\'' +
+				'}';
+	}
 }
 
 @Embeddable
@@ -385,6 +460,52 @@ class MonthlyTarget {
     
     // Default constructor
     public MonthlyTarget() {}
+
+	// Getters
+	public Integer getJan() { return jan; }
+	public Integer getFeb() { return feb; }
+	public Integer getMar() { return mar; }
+	public Integer getApr() { return apr; }
+	public Integer getMay() { return may; }
+	public Integer getJune() { return june; }
+	public Integer getJuly() { return july; }
+	public Integer getAug() { return aug; }
+	public Integer getSep() { return sep; }
+	public Integer getOct() { return oct; }
+	public Integer getNov() { return nov; }
+	public Integer getDec() { return dec; }
+
+	// Setters
+	public void setJan(Integer jan) { this.jan = jan; }
+	public void setFeb(Integer feb) { this.feb = feb; }
+	public void setMar(Integer mar) { this.mar = mar; }
+	public void setApr(Integer apr) { this.apr = apr; }
+	public void setMay(Integer may) { this.may = may; }
+	public void setJune(Integer june) { this.june = june; }
+	public void setJuly(Integer july) { this.july = july; }
+	public void setAug(Integer aug) { this.aug = aug; }
+	public void setSep(Integer sep) { this.sep = sep; }
+	public void setOct(Integer oct) { this.oct = oct; }
+	public void setNov(Integer nov) { this.nov = nov; }
+	public void setDec(Integer dec) { this.dec = dec; }
+
+	@Override
+	public String toString() {
+		return "MonthlyTarget{" +
+				"jan=" + jan +
+				", feb=" + feb +
+				", mar=" + mar +
+				", apr=" + apr +
+				", may=" + may +
+				", june=" + june +
+				", july=" + july +
+				", aug=" + aug +
+				", sep=" + sep +
+				", oct=" + oct +
+				", nov=" + nov +
+				", dec=" + dec +
+				'}';
+	}
 }
 
 

@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/financial-tracking")
-@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*")
 public class FinancialTrackingController {
     
     @Autowired

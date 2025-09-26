@@ -44,7 +44,7 @@ public interface FinancialTrackingRepository extends JpaRepository<FinancialTrac
     Double getRemainingBudget();
     
     // Calculate efficiency rate (allocated vs total)
-    @Query("SELECT (SUM(f.allocatedBudget) / SUM(f.totalBudget)) * 100 FROM FinancialTracking f WHERE SUM(f.totalBudget) > 0")
+    @Query("SELECT (SUM(f.allocatedBudget) * 100.0) / SUM(f.totalBudget) FROM FinancialTracking f")
     Double getEfficiencyRate();
     
     // Get average project budget
@@ -52,6 +52,6 @@ public interface FinancialTrackingRepository extends JpaRepository<FinancialTrac
     Double getAverageProjectBudget();
     
     // Calculate fund utilization rate
-    @Query("SELECT (SUM(f.ivdpBudget + f.healthBudget + f.educationBudget + f.climateResilience + f.livelihood + f.governmentConvergence) / SUM(f.allocatedBudget)) * 100 FROM FinancialTracking f WHERE SUM(f.allocatedBudget) > 0")
+    @Query("SELECT (SUM(f.ivdpBudget + f.healthBudget + f.educationBudget + f.climateResilience + f.livelihood + f.governmentConvergence) * 100.0) / SUM(f.allocatedBudget) FROM FinancialTracking f")
     Double getFundUtilizationRate();
 }
