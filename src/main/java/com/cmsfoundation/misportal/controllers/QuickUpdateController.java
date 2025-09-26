@@ -14,7 +14,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/quick-updates")
-//@CrossOrigin(origins = "*")
 public class QuickUpdateController {
     
     @Autowired

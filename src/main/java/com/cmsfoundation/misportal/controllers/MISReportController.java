@@ -14,7 +14,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/mis-reports")
-//@CrossOrigin(origins = "*")
 public class MISReportController {
     
     @Autowired

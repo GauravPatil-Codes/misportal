@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/media-evidence")
-//@CrossOrigin(origins = "*")
 public class MediaEvidenceController {
     
     @Autowired
