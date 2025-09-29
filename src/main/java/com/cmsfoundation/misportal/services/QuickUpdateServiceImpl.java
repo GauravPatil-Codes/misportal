@@ -38,11 +38,45 @@ public class QuickUpdateServiceImpl implements QuickUpdateService {
     
     @Override
     public QuickUpdate updateQuickUpdate(Long id, QuickUpdate quickUpdate) {
-        if (quickUpdateRepository.existsById(id)) {
-            quickUpdate.setId(id);
-            return quickUpdateRepository.save(quickUpdate);
+        QuickUpdate existing = quickUpdateRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("QuickUpdate not found with id: " + id));
+
+        // Only update fields if they are not null in the request
+        if (quickUpdate.getProject() != null) {
+            existing.setProject(quickUpdate.getProject());
         }
-        throw new RuntimeException("QuickUpdate not found with id: " + id);
+        if (quickUpdate.getUpdateType() != null) {
+            existing.setUpdateType(quickUpdate.getUpdateType());
+        }
+        if (quickUpdate.getUpdateTitle() != null) {
+            existing.setUpdateTitle(quickUpdate.getUpdateTitle());
+        }
+        if (quickUpdate.getProgressDescription() != null) {
+            existing.setProgressDescription(quickUpdate.getProgressDescription());
+        }
+        if (quickUpdate.getOverallProgress() != null) {
+            existing.setOverallProgress(quickUpdate.getOverallProgress());
+        }
+        if (quickUpdate.getCurrentChallenges() != null) {
+            existing.setCurrentChallenges(quickUpdate.getCurrentChallenges());
+        }
+        if (quickUpdate.getNextSteps() != null) {
+            existing.setNextSteps(quickUpdate.getNextSteps());
+        }
+        if (quickUpdate.getMediaFilesCount() != null) {
+            existing.setMediaFilesCount(quickUpdate.getMediaFilesCount());
+        }
+        if (quickUpdate.getMediaFiles() != null) {
+            existing.setMediaFiles(quickUpdate.getMediaFiles());
+        }
+        if (quickUpdate.getStatus() != null) {
+            existing.setStatus(quickUpdate.getStatus());
+        }
+        if (quickUpdate.getUpdatedAt() != null) {
+            existing.setUpdatedAt(quickUpdate.getUpdatedAt());
+        }
+
+        return quickUpdateRepository.save(existing);
     }
     
     @Override

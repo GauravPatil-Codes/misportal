@@ -34,13 +34,31 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Override
     public Project updateProject(Long id, Project project) {
-        if (projectRepository.existsById(id)) {
-            project.setId(id);
-            return projectRepository.save(project);
-        }
-        throw new RuntimeException("Project not found with id: " + id);
+        // Fetch existing Project or throw exception if not found
+        Project existing = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
+
+        if (project.getProjectType() != null) existing.setProjectType(project.getProjectType());
+        if (project.getProjectHead() != null) existing.setProjectHead(project.getProjectHead());
+        if (project.getProjectName() != null) existing.setProjectName(project.getProjectName());
+        if (project.getProjectTheme() != null) existing.setProjectTheme(project.getProjectTheme());
+        if (project.getProjectNgoPartner() != null) existing.setProjectNgoPartner(project.getProjectNgoPartner());
+        if (project.getExpectedBeneficiaries() != null) existing.setExpectedBeneficiaries(project.getExpectedBeneficiaries());
+        if (project.getProjectLocation() != null) existing.setProjectLocation(project.getProjectLocation());
+        if (project.getProjectStartDate() != null) existing.setProjectStartDate(project.getProjectStartDate());
+        if (project.getProjectEndDate() != null) existing.setProjectEndDate(project.getProjectEndDate());
+        if (project.getProjectDescription() != null) existing.setProjectDescription(project.getProjectDescription());
+        if (project.getProjectObjectives() != null) existing.setProjectObjectives(project.getProjectObjectives());
+        if (project.getBudget() != null) existing.setBudget(project.getBudget());
+        if (project.getBudgetAllocationMatrix() != null) existing.setBudgetAllocationMatrix(project.getBudgetAllocationMatrix());
+        if (project.getWorkPlan() != null) existing.setWorkPlan(project.getWorkPlan());
+        if (project.getMonthlyTarget() != null) existing.setMonthlyTarget(project.getMonthlyTarget());
+        if (project.getProjectStatus() != null) existing.setProjectStatus(project.getProjectStatus());
+
+        return projectRepository.save(existing);
     }
-    
+
+
     @Override
     public void deleteProject(Long id) {
         if (projectRepository.existsById(id)) {

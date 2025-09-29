@@ -34,13 +34,25 @@ public class FinancialTrackingServiceImpl implements FinancialTrackingService {
     
     @Override
     public FinancialTracking updateFinancialTracking(Long id, FinancialTracking financialTracking) {
-        if (financialTrackingRepository.existsById(id)) {
-            financialTracking.setId(id);
-            return financialTrackingRepository.save(financialTracking);
-        }
-        throw new RuntimeException("Financial Tracking not found with id: " + id);
+
+        FinancialTracking existing = financialTrackingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Financial Tracking not found with id: " + id));
+
+        if (financialTracking.getTotalBudget() != null) existing.setTotalBudget(financialTracking.getTotalBudget());
+        if (financialTracking.getAllocatedBudget() != null) existing.setAllocatedBudget(financialTracking.getAllocatedBudget());
+        if (financialTracking.getIvdpBudget() != null) existing.setIvdpBudget(financialTracking.getIvdpBudget());
+        if (financialTracking.getHealthBudget() != null) existing.setHealthBudget(financialTracking.getHealthBudget());
+        if (financialTracking.getEducationBudget() != null) existing.setEducationBudget(financialTracking.getEducationBudget());
+        if (financialTracking.getClimateResilience() != null) existing.setClimateResilience(financialTracking.getClimateResilience());
+        if (financialTracking.getLivelihood() != null) existing.setLivelihood(financialTracking.getLivelihood());
+        if (financialTracking.getGovernmentConvergence() != null) existing.setGovernmentConvergence(financialTracking.getGovernmentConvergence());
+        if (financialTracking.getCreatedAt() != null) existing.setCreatedAt(financialTracking.getCreatedAt());
+        if (financialTracking.getUpdatedAt() != null) existing.setUpdatedAt(financialTracking.getUpdatedAt());
+
+        return financialTrackingRepository.save(existing);
     }
-    
+
+
     @Override
     public void deleteFinancialTracking(Long id) {
         if (financialTrackingRepository.existsById(id)) {
