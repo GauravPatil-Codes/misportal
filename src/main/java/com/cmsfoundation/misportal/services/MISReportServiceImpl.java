@@ -33,13 +33,27 @@ public class MISReportServiceImpl implements MISReportService {
     
     @Override
     public MISReport updateMISReport(Long id, MISReport misReport) {
-        if (misReportRepository.existsById(id)) {
-            misReport.setId(id);
-            return misReportRepository.save(misReport);
-        }
-        throw new RuntimeException("MIS Report not found with id: " + id);
+
+        MISReport existing = misReportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("MIS Report not found with id: " + id));
+
+        if (misReport.getProject() != null) existing.setProject(misReport.getProject());
+        if (misReport.getReportingPeriod() != null) existing.setReportingPeriod(misReport.getReportingPeriod());
+        if (misReport.getMisReportSubmissionDateTime() != null)
+            existing.setMisReportSubmissionDateTime(misReport.getMisReportSubmissionDateTime());
+        if (misReport.getCompletedTarget() != null) existing.setCompletedTarget(misReport.getCompletedTarget());
+        if (misReport.getAllocatedTarget() != null) existing.setAllocatedTarget(misReport.getAllocatedTarget());
+        if (misReport.getDeviationReport() != null) existing.setDeviationReport(misReport.getDeviationReport());
+        if (misReport.getMitigationPlan() != null) existing.setMitigationPlan(misReport.getMitigationPlan());
+        if (misReport.getAttachments() != null) existing.setAttachments(misReport.getAttachments());
+        if (misReport.getAchievementPercentage() != null) existing.setAchievementPercentage(misReport.getAchievementPercentage());
+        if (misReport.getCreatedAt() != null) existing.setCreatedAt(misReport.getCreatedAt());
+        if (misReport.getUpdatedAt() != null) existing.setUpdatedAt(misReport.getUpdatedAt());
+
+        return misReportRepository.save(existing);
     }
-    
+
+
     @Override
     public void deleteMISReport(Long id) {
         if (misReportRepository.existsById(id)) {

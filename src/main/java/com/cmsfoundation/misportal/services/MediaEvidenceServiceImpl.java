@@ -32,13 +32,20 @@ public class MediaEvidenceServiceImpl implements MediaEvidenceService {
     
     @Override
     public MediaEvidence updateMediaEvidence(Long id, MediaEvidence mediaEvidence) {
-        if (mediaEvidenceRepository.existsById(id)) {
-            mediaEvidence.setId(id);
-            return mediaEvidenceRepository.save(mediaEvidence);
-        }
-        throw new RuntimeException("Media Evidence not found with id: " + id);
+        MediaEvidence existing = mediaEvidenceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Media Evidence not found with id: " + id));
+
+        if (mediaEvidence.getMediaEvidence() != null) existing.setMediaEvidence(mediaEvidence.getMediaEvidence());
+        if (mediaEvidence.getTitle() != null) existing.setTitle(mediaEvidence.getTitle());
+        if (mediaEvidence.getVideoLink() != null) existing.setVideoLink(mediaEvidence.getVideoLink());
+        if (mediaEvidence.getImageLink() != null) existing.setImageLink(mediaEvidence.getImageLink());
+        if (mediaEvidence.getCreatedAt() != null) existing.setCreatedAt(mediaEvidence.getCreatedAt());
+        if (mediaEvidence.getUpdatedAt() != null) existing.setUpdatedAt(mediaEvidence.getUpdatedAt());
+
+        return mediaEvidenceRepository.save(existing);
     }
-    
+
+
     @Override
     public void deleteMediaEvidence(Long id) {
         if (mediaEvidenceRepository.existsById(id)) {
