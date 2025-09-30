@@ -31,7 +31,7 @@ public class FileUploadController {
     private FtpDocumentHelper ftpDocumentHelper;
 
     @PostMapping("/upload/images")
-    public ResponseEntity<UploadResponse> uploadImages(@RequestParam("files") MultipartFile[] files) {
+    public ResponseEntity<UploadResponse> uploadImages(@RequestParam MultipartFile[] files) {
         if (files == null || files.length == 0) {
             return ResponseEntity.badRequest()
                     .body(new UploadResponse(400, "At least one file is required.", Collections.emptyList()));
@@ -72,7 +72,7 @@ public class FileUploadController {
 
     // uplaod video
     @PostMapping("/upload/videos")
-    public ResponseEntity<UploadResponse> uploadVideos(@RequestParam("files") MultipartFile[] files) {
+    public ResponseEntity<UploadResponse> uploadVideos(@RequestParam MultipartFile[] files) {
         if (files == null || files.length == 0) {
             return ResponseEntity.badRequest()
                     .body(new UploadResponse(400, "At least one video file is required.", Collections.emptyList()));
@@ -116,7 +116,7 @@ public class FileUploadController {
 
     // upload documents
     @PostMapping("/upload/documents")
-    public ResponseEntity<UploadResponse> uploadDocuments(@RequestParam("files") MultipartFile[] files) {
+    public ResponseEntity<UploadResponse> uploadDocuments(@RequestParam MultipartFile[] files) {
         if (files == null || files.length == 0) {
             return ResponseEntity.badRequest()
                     .body(new UploadResponse(400, "At least one document  is required.", Collections.emptyList()));

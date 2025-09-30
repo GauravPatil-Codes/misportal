@@ -1,7 +1,11 @@
 package com.cmsfoundation.misportal.controllers;
 
 import com.cmsfoundation.misportal.entities.Project;
+import com.cmsfoundation.misportal.entities.BudgetAllocationItem;
+import com.cmsfoundation.misportal.entities.BudgetHead;
+import com.cmsfoundation.misportal.dtos.ProjectCreateRequest;
 import com.cmsfoundation.misportal.services.ProjectService;
+import com.cmsfoundation.misportal.services.BudgetAllocationItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +22,18 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
     
-    // CRUD Operations
+    @Autowired
+    private BudgetAllocationItemService budgetAllocationItemService;
     
+    // UPDATED: Clean controller method using service layer for conversion
     @PostMapping
-    public ResponseEntity<Project> createProject(@RequestBody Project project) {
+    public ResponseEntity<Project> createProject(@RequestBody ProjectCreateRequest request) {
         try {
-            Project savedProject = projectService.createProject(project);
+            // Use the enhanced service method that handles DTO conversion
+            Project savedProject = projectService.createProjectWithDetails(request);
             return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -65,8 +73,33 @@ public class ProjectController {
         }
     }
     
-    // Business Operations
+    // Budget Operations
+    @GetMapping("/{id}/budget-items")
+    public ResponseEntity<List<BudgetAllocationItem>> getProjectBudgetItems(@PathVariable Long id) {
+        List<BudgetAllocationItem> budgetItems = budgetAllocationItemService.getBudgetItemsByProject(id);
+        return new ResponseEntity<>(budgetItems, HttpStatus.OK);
+    }
     
+    @GetMapping("/{id}/budget-items/head/{budgetHead}")
+    public ResponseEntity<List<BudgetAllocationItem>> getProjectBudgetItemsByHead(
+            @PathVariable Long id, @PathVariable BudgetHead budgetHead) {
+        List<BudgetAllocationItem> budgetItems = budgetAllocationItemService.getBudgetItemsByProjectAndHead(id, budgetHead);
+        return new ResponseEntity<>(budgetItems, HttpStatus.OK);
+    }
+    
+    @GetMapping("/{id}/budget-summary")
+    public ResponseEntity<Map<BudgetHead, Double>> getProjectBudgetSummary(@PathVariable Long id) {
+        Map<BudgetHead, Double> budgetSummary = budgetAllocationItemService.getBudgetSummaryByProject(id);
+        return new ResponseEntity<>(budgetSummary, HttpStatus.OK);
+    }
+    
+    @GetMapping("/{id}/total-budget")
+    public ResponseEntity<Double> getProjectTotalBudget(@PathVariable Long id) {
+        Double totalBudget = budgetAllocationItemService.getTotalBudgetByProject(id);
+        return new ResponseEntity<>(totalBudget, HttpStatus.OK);
+    }
+    
+    // Business Operations (existing methods)
     @GetMapping("/total-budget")
     public ResponseEntity<Double> getTotalBudgetProject() {
         Double totalBudget = projectService.getTotalBudgetProject();
@@ -140,7 +173,6 @@ public class ProjectController {
     }
     
     // Additional Analytics APIs
-    
     @GetMapping("/count/status")
     public ResponseEntity<Map<String, Long>> getProjectCountByStatus() {
         Map<String, Long> statusCount = projectService.getProjectCountByStatus();

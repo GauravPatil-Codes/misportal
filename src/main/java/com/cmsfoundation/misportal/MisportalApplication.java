@@ -13,8 +13,8 @@ public class MisportalApplication {
 		SpringApplication.run(MisportalApplication.class, args);
 	}
 
-	@Bean
-	public WebMvcConfigurer configure() {
+    @Bean
+    WebMvcConfigurer configure() {
 		return new WebMvcConfigurer() {
 			@Override
 			public void addCorsMappings(CorsRegistry reg) {
