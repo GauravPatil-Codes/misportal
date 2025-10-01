@@ -1,13 +1,12 @@
 package com.cmsfoundation.misportal.dtos;
 
-import com.cmsfoundation.misportal.entities.*;
-
+import com.cmsfoundation.misportal.entities.Budget;
+import com.cmsfoundation.misportal.entities.WorkPlan;
 import java.time.LocalDate;
 import java.util.List;
 
 public class ProjectCreateRequest {
     
-    // Basic project fields
     private String projectType;
     private String projectHead;
     private String projectName;
@@ -22,20 +21,21 @@ public class ProjectCreateRequest {
     private String projectdpr;
     private String projectStatus;
     
-    // Keep existing embedded objects for backward compatibility
+    // Embedded objects (for backward compatibility)
     private Budget budget;
-    private BudgetAllocationMatrix budgetAllocationMatrix;
-    private WorkPlan workPlan;  
-    private MonthlyTarget monthlyTarget;
+    private WorkPlan workPlan;
     
-    // NEW: Arrays for multiple budget items and targets
+    // ✅ REMOVED: MonthlyTargetItem - using only MonthlyTarget now
+    // private MonthlyTargetItem monthlyTarget;
+    
+    // New list-based objects - your perfect logic
     private List<BudgetAllocationItemDTO> budgetAllocationItems;
-    private List<MonthlyTargetItemDTO> monthlyTargetItems;
+    private List<MonthlyTargetItemDTO> monthlyTargetItems; // DTO for creating MonthlyTarget entities
     
     // Default constructor
     public ProjectCreateRequest() {}
 
-    // All getters and setters
+    // Getters and Setters
     public String getProjectType() { return projectType; }
     public void setProjectType(String projectType) { this.projectType = projectType; }
     
@@ -78,18 +78,27 @@ public class ProjectCreateRequest {
     public Budget getBudget() { return budget; }
     public void setBudget(Budget budget) { this.budget = budget; }
     
-    public BudgetAllocationMatrix getBudgetAllocationMatrix() { return budgetAllocationMatrix; }
-    public void setBudgetAllocationMatrix(BudgetAllocationMatrix budgetAllocationMatrix) { this.budgetAllocationMatrix = budgetAllocationMatrix; }
-    
     public WorkPlan getWorkPlan() { return workPlan; }
     public void setWorkPlan(WorkPlan workPlan) { this.workPlan = workPlan; }
     
-    public MonthlyTarget getMonthlyTarget() { return monthlyTarget; }
-    public void setMonthlyTarget(MonthlyTarget monthlyTarget) { this.monthlyTarget = monthlyTarget; }
+    // ✅ REMOVED: MonthlyTargetItem methods - not needed anymore
+    // public MonthlyTargetItem getMonthlyTarget() { return monthlyTarget; }
+    // public void setMonthlyTarget(MonthlyTargetItem monthlyTarget) { this.monthlyTarget = monthlyTarget; }
     
     public List<BudgetAllocationItemDTO> getBudgetAllocationItems() { return budgetAllocationItems; }
     public void setBudgetAllocationItems(List<BudgetAllocationItemDTO> budgetAllocationItems) { this.budgetAllocationItems = budgetAllocationItems; }
     
+    // ✅ This creates MonthlyTarget entities (your perfect system)
     public List<MonthlyTargetItemDTO> getMonthlyTargetItems() { return monthlyTargetItems; }
     public void setMonthlyTargetItems(List<MonthlyTargetItemDTO> monthlyTargetItems) { this.monthlyTargetItems = monthlyTargetItems; }
+
+    @Override
+    public String toString() {
+        return "ProjectCreateRequest{" +
+                "projectName='" + projectName + '\'' +
+                ", projectType='" + projectType + '\'' +
+                ", projectTheme='" + projectTheme + '\'' +
+                ", projectStatus='" + projectStatus + '\'' +
+                '}';
+    }
 }

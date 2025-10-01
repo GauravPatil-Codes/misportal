@@ -2,22 +2,26 @@ package com.cmsfoundation.misportal.services;
 
 import com.cmsfoundation.misportal.entities.Project;
 import com.cmsfoundation.misportal.entities.BudgetAllocationItem;
-import com.cmsfoundation.misportal.entities.MonthlyTargetItem;
+import com.cmsfoundation.misportal.entities.MonthlyTarget;
+import com.cmsfoundation.misportal.entities.Budget;
 import com.cmsfoundation.misportal.dtos.ProjectCreateRequest;
 import com.cmsfoundation.misportal.dtos.BudgetAllocationItemDTO;
 import com.cmsfoundation.misportal.dtos.MonthlyTargetItemDTO;
 import com.cmsfoundation.misportal.repositories.ProjectRepository;
+import com.cmsfoundation.misportal.repositories.MonthlyTargetRepository;
 import com.cmsfoundation.misportal.services.BudgetAllocationItemService;
-import com.cmsfoundation.misportal.services.MonthlyTargetItemService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
@@ -26,18 +30,13 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectRepository projectRepository;
     
     @Autowired
-    private BudgetAllocationItemService budgetAllocationItemService;
+    private MonthlyTargetRepository monthlyTargetRepository;
     
     @Autowired
-    private MonthlyTargetItemService monthlyTargetItemService;
+    private BudgetAllocationItemService budgetAllocationItemService;
     
     @Override
-    public Project createProject(Project project) {
-        return projectRepository.save(project);
-    }
-    
-    // NEW: Enhanced method to handle full project creation with DTOs
-    @Override
+    @Transactional
     public Project createProjectWithDetails(ProjectCreateRequest request) {
         // Create basic project entity
         Project project = new Project();
@@ -59,85 +58,147 @@ public class ProjectServiceImpl implements ProjectService {
         if (request.getBudget() != null) {
             project.setBudget(request.getBudget());
         }
-        if (request.getBudgetAllocationMatrix() != null) {
-            project.setBudgetAllocationMatrix(request.getBudgetAllocationMatrix());
-        }
         if (request.getWorkPlan() != null) {
             project.setWorkPlan(request.getWorkPlan());
         }
-        if (request.getMonthlyTarget() != null) {
-            project.setMonthlyTarget(request.getMonthlyTarget());
-        }
+        
+        // ✅ REMOVED: MonthlyTargetItem references - using only MonthlyTarget now
+        // if (request.getMonthlyTarget() != null) {
+        //     project.setMonthlyTarget(request.getMonthlyTarget());
+        // }
         
         // Save project first
         Project savedProject = projectRepository.save(project);
         
-        // Convert and save budget allocation items
+        // Convert and save budget allocation items with monthly targets
         if (request.getBudgetAllocationItems() != null && !request.getBudgetAllocationItems().isEmpty()) {
-            List<BudgetAllocationItem> budgetItems = convertBudgetAllocationDTOsToEntities(
-                request.getBudgetAllocationItems(), savedProject);
-            budgetAllocationItemService.createMultipleBudgetItems(budgetItems);
-        }
-        
-        // Convert and save monthly target items
-        if (request.getMonthlyTargetItems() != null && !request.getMonthlyTargetItems().isEmpty()) {
-            List<MonthlyTargetItem> monthlyTargets = convertMonthlyTargetDTOsToEntities(
-                request.getMonthlyTargetItems(), savedProject);
-            monthlyTargetItemService.createMultipleMonthlyTargets(monthlyTargets);
+            List<BudgetAllocationItem> savedBudgetItems = createBudgetItemsWithTargets(
+                request.getBudgetAllocationItems(), savedProject, request.getMonthlyTargetItems());
+            
+            savedProject.setBudgetAllocationItems(savedBudgetItems);
+            
+            // Calculate and update budget summary
+            Budget budget = savedProject.getBudget() != null ? savedProject.getBudget() : new Budget();
+            budget.calculateTotalsFromItems(savedBudgetItems);
+            savedProject.setBudget(budget);
+            
+            // Save project with updated budget summary
+            savedProject = projectRepository.save(savedProject);
         }
         
         return savedProject;
     }
     
-    // Helper method to convert BudgetAllocationItemDTO to BudgetAllocationItem
-    private List<BudgetAllocationItem> convertBudgetAllocationDTOsToEntities(
-            List<BudgetAllocationItemDTO> dtos, Project project) {
+    @Transactional
+    private List<BudgetAllocationItem> createBudgetItemsWithTargets(
+            List<BudgetAllocationItemDTO> budgetItemDTOs, 
+            Project project, 
+            List<MonthlyTargetItemDTO> monthlyTargetDTOs) {
         
-        return dtos.stream().map(dto -> {
-            BudgetAllocationItem entity = new BudgetAllocationItem();
-            entity.setSrNo(dto.getSrNo());
-            entity.setItemName(dto.getItemName());
-            entity.setDescription(dto.getDescription());
-            entity.setUnits(dto.getUnits());
-            entity.setUnitCost(dto.getUnitCost());
-            entity.setCmsContribution(dto.getCmsContribution());
-            entity.setNgoContribution(dto.getNgoContribution());
-            entity.setGovernmentContribution(dto.getGovernmentContribution());
-            entity.setBeneficiaryContribution(dto.getBeneficiaryContribution());
-            entity.setBudgetType(dto.getBudgetType());
-            entity.setProject(project);
-            return entity;
-        }).collect(Collectors.toList());
+        List<BudgetAllocationItem> savedBudgetItems = new ArrayList<>();
+        
+        // Create map of monthly targets by budget item srNo for quick lookup
+        Map<String, List<MonthlyTargetItemDTO>> targetsByBudgetItem = new HashMap<>();
+        if (monthlyTargetDTOs != null && !monthlyTargetDTOs.isEmpty()) {
+            for (MonthlyTargetItemDTO dto : monthlyTargetDTOs) {
+                String srNo = dto.getBudgetAllocationItemSrNo();
+                targetsByBudgetItem.computeIfAbsent(srNo, k -> new ArrayList<>()).add(dto);
+            }
+        }
+        
+        for (BudgetAllocationItemDTO dto : budgetItemDTOs) {
+            // Convert DTO to entity and save
+            BudgetAllocationItem budgetItem = convertBudgetAllocationDTO(dto, project);
+            BudgetAllocationItem savedBudgetItem = budgetAllocationItemService.createBudgetItem(budgetItem);
+            
+            // Create monthly targets for this budget item
+            List<MonthlyTarget> monthlyTargets = createMonthlyTargetsForBudgetItem(
+                savedBudgetItem, project, targetsByBudgetItem.get(dto.getSrNo()));
+            
+            // Save monthly targets
+            if (!monthlyTargets.isEmpty()) {
+                List<MonthlyTarget> savedTargets = monthlyTargetRepository.saveAll(monthlyTargets);
+                savedBudgetItem.setMonthlyTargets(savedTargets);
+            }
+            
+            savedBudgetItems.add(savedBudgetItem);
+        }
+        
+        return savedBudgetItems;
     }
     
-    // Helper method to convert MonthlyTargetItemDTO to MonthlyTargetItem
-    private List<MonthlyTargetItem> convertMonthlyTargetDTOsToEntities(
-    	    List<MonthlyTargetItemDTO> dtos, Project project) {
-
-    	    // Load all budget allocation items for this project once for lookup
-    	    Map<String, BudgetAllocationItem> budgetItemMap = budgetAllocationItemService
-    	        .getBudgetItemsByProject(project.getId())
-    	        .stream()
-    	        .collect(Collectors.toMap(BudgetAllocationItem::getSrNo, item -> item));
-
-    	    return dtos.stream()
-    	        .map(dto -> {
-    	            MonthlyTargetItem entity = new MonthlyTargetItem();
-    	            entity.setTargetMonth(dto.getTargetMonth());
-    	            entity.setPlannedTarget(dto.getPlannedTarget());
-    	            entity.setTargetDescription(dto.getTargetDescription());
-    	            entity.setProject(project);
-
-    	            BudgetAllocationItem linkedItem = budgetItemMap.get(dto.getBudgetAllocationItemSrNo());
-    	            if (linkedItem == null) {
-    	                throw new RuntimeException("Invalid budgetAllocationItemSrNo: " + dto.getBudgetAllocationItemSrNo());
-    	            }
-    	            entity.setBudgetAllocationItem(linkedItem);
-
-    	            return entity;
-    	        }).collect(Collectors.toList());
-    	}
-
+    private BudgetAllocationItem convertBudgetAllocationDTO(BudgetAllocationItemDTO dto, Project project) {
+        BudgetAllocationItem entity = new BudgetAllocationItem();
+        entity.setSrNo(dto.getSrNo());
+        entity.setItemName(dto.getItemName());
+        entity.setDescription(dto.getDescription());
+        entity.setUnits(dto.getUnits());
+        entity.setUnitCost(dto.getUnitCost());
+        entity.setCmsContribution(dto.getCmsContribution());
+        entity.setNgoContribution(dto.getNgoContribution());
+        entity.setGovernmentContribution(dto.getGovernmentContribution());
+        entity.setBeneficiaryContribution(dto.getBeneficiaryContribution());
+        entity.setBudgetType(dto.getBudgetType());
+        entity.setProject(project);
+        return entity;
+    }
+    
+    private List<MonthlyTarget> createMonthlyTargetsForBudgetItem(
+            BudgetAllocationItem budgetItem, 
+            Project project, 
+            List<MonthlyTargetItemDTO> targetDTOs) {
+        
+        List<MonthlyTarget> monthlyTargets = new ArrayList<>();
+        
+        // Generate all months between project start and end date
+        LocalDate startDate = project.getProjectStartDate();
+        LocalDate endDate = project.getProjectEndDate();
+        
+        if (startDate == null || endDate == null) {
+            return monthlyTargets; // Return empty list if dates are not set
+        }
+        
+        YearMonth start = YearMonth.from(startDate);
+        YearMonth end = YearMonth.from(endDate);
+        
+        // Create map of provided targets by month for quick lookup
+        Map<LocalDate, MonthlyTargetItemDTO> providedTargets = new HashMap<>();
+        if (targetDTOs != null && !targetDTOs.isEmpty()) {
+            for (MonthlyTargetItemDTO dto : targetDTOs) {
+                providedTargets.put(dto.getTargetMonth(), dto);
+            }
+        }
+        
+        // Create monthly target for each month in project lifecycle
+        for (YearMonth month = start; !month.isAfter(end); month = month.plusMonths(1)) {
+            LocalDate targetMonth = month.atDay(1);
+            MonthlyTargetItemDTO providedTarget = providedTargets.get(targetMonth);
+            
+            MonthlyTarget monthlyTarget = new MonthlyTarget();
+            monthlyTarget.setTargetMonth(targetMonth);
+            monthlyTarget.setBudgetAllocationItem(budgetItem);
+            monthlyTarget.setProject(project);
+            
+            if (providedTarget != null) {
+                // Use provided target data
+                monthlyTarget.setPlannedTarget(providedTarget.getPlannedTarget());
+                monthlyTarget.setTargetDescription(providedTarget.getTargetDescription());
+            } else {
+                // Set default values for months without specific targets
+                monthlyTarget.setPlannedTarget(0);
+                monthlyTarget.setTargetDescription("No specific target set for " + month.getMonth() + " " + month.getYear());
+            }
+            
+            monthlyTargets.add(monthlyTarget);
+        }
+        
+        return monthlyTargets;
+    }
+    
+    @Override
+    public Project createProject(Project project) {
+        return projectRepository.save(project);
+    }
     
     @Override
     public List<Project> getAllProjects() {
@@ -151,7 +212,6 @@ public class ProjectServiceImpl implements ProjectService {
     
     @Override
     public Project updateProject(Long id, Project project) {
-        // Fetch existing Project or throw exception if not found
         Project existing = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
 
@@ -167,18 +227,13 @@ public class ProjectServiceImpl implements ProjectService {
         if (project.getProjectDescription() != null) existing.setProjectDescription(project.getProjectDescription());
         if (project.getProjectObjectives() != null) existing.setProjectObjectives(project.getProjectObjectives());
         if (project.getBudget() != null) existing.setBudget(project.getBudget());
-        if (project.getBudgetAllocationMatrix() != null) existing.setBudgetAllocationMatrix(project.getBudgetAllocationMatrix());
         if (project.getWorkPlan() != null) existing.setWorkPlan(project.getWorkPlan());
-        if (project.getMonthlyTarget() != null) existing.setMonthlyTarget(project.getMonthlyTarget());
         if (project.getProjectStatus() != null) existing.setProjectStatus(project.getProjectStatus());
+        if (project.getBudgetAllocationItems() != null) existing.setBudgetAllocationItems(project.getBudgetAllocationItems());
+        if (project.getMonthlyTargets() != null) existing.setMonthlyTargets(project.getMonthlyTargets());
         
-        // Update new relationships if provided
-        if (project.getBudgetAllocationItems() != null) {
-            existing.setBudgetAllocationItems(project.getBudgetAllocationItems());
-        }
-        if (project.getMonthlyTargetItems() != null) {
-            existing.setMonthlyTargetItems(project.getMonthlyTargetItems());
-        }
+        // ✅ REMOVED: MonthlyTargetItem references
+        // if (project.getMonthlyTarget() != null) existing.setMonthlyTarget(project.getMonthlyTarget());
 
         return projectRepository.save(existing);
     }
@@ -291,5 +346,23 @@ public class ProjectServiceImpl implements ProjectService {
             themeCount.put((String) result[0], (Long) result[1]);
         }
         return themeCount;
+    }
+    
+    // Method to recalculate budget when budget items are updated
+    @Transactional
+    public Project recalculateBudgetSummary(Long projectId) {
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
+        if (projectOpt.isPresent()) {
+            Project project = projectOpt.get();
+            
+            // Recalculate budget summary
+            if (project.getBudget() == null) {
+                project.setBudget(new Budget());
+            }
+            project.getBudget().calculateTotalsFromItems(project.getBudgetAllocationItems());
+            
+            return projectRepository.save(project);
+        }
+        throw new RuntimeException("Project not found with id: " + projectId);
     }
 }

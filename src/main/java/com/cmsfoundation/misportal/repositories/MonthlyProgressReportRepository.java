@@ -35,10 +35,11 @@ public interface MonthlyProgressReportRepository extends JpaRepository<MonthlyPr
     List<MonthlyProgressReport> getReportsWithDeviations(@Param("projectId") Long projectId);
     
     // Get performance by budget head
-    @Query("SELECT m.monthlyTargetItem.budgetAllocationItem.budgetType, AVG(m.achievementPercentage) " +
-           "FROM MonthlyProgressReport m WHERE m.project.id = :projectId " +
-           "GROUP BY m.monthlyTargetItem.budgetAllocationItem.budgetType")
-    List<Object[]> getPerformanceByBudgetHead(@Param("projectId") Long projectId);
+    @Query("SELECT m.monthlyTarget.budgetAllocationItem.budgetType, AVG(m.achievementPercentage) " +
+    	       "FROM MonthlyProgressReport m WHERE m.project.id = :projectId " +
+    	       "GROUP BY m.monthlyTarget.budgetAllocationItem.budgetType")
+    	List<Object[]> getPerformanceByBudgetHead(@Param("projectId") Long projectId);
+
     
     // Get monthly performance trend
     @Query("SELECT m.reportingMonth, AVG(m.achievementPercentage) " +

@@ -109,7 +109,7 @@ public class QuickUpdateServiceImpl implements QuickUpdateService {
         List<Project> projects = projectRepository.searchProjectsByString(projectName);
         if (!projects.isEmpty()) {
             Project project = projects.get(0);
-            return project.getMonthlyTarget();
+            return project.getMonthlyTargets();
         }
         throw new RuntimeException("Project not found with name: " + projectName);
     }

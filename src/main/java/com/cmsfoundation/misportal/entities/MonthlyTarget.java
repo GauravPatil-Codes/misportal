@@ -1,91 +1,145 @@
 package com.cmsfoundation.misportal.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@Embeddable
+@Entity
+@Table(name = "monthly_targets")
 public class MonthlyTarget {
-    @Column(name = "jan_target")
-    private Integer jan = 0;
     
-    @Column(name = "feb_target")
-    private Integer feb = 0;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     
-    @Column(name = "mar_target")
-    private Integer mar = 0;
+    // MANY-TO-ONE relationship with BudgetAllocationItem
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "budget_allocation_item_id", nullable = false)
+    @JsonBackReference("budgetItem-monthlyTargets")
+    private BudgetAllocationItem budgetAllocationItem;
     
-    @Column(name = "apr_target")
-    private Integer apr = 0;
+    // MANY-TO-ONE relationship with Project (for easier querying)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    @JsonBackReference("project-monthlyTargets")
+    private Project project;
     
-    @Column(name = "may_target")
-    private Integer may = 0;
+    @Column(name = "target_month")
+    private LocalDate targetMonth; // e.g., 2025-01-01 for Jan 2025
     
-    @Column(name = "june_target")
-    private Integer june = 0;
+    @Column(name = "planned_target")
+    private Integer plannedTarget; // Set during project creation
     
-    @Column(name = "july_target")
-    private Integer july = 0;
+    @Column(name = "target_description", columnDefinition = "TEXT")
+    private String targetDescription; // Description of what needs to be achieved
     
-    @Column(name = "aug_target")
-    private Integer aug = 0;
+    @Column(name = "achieved_target")
+    private Integer achievedTarget = 0; // Updated during MIS submission
     
-    @Column(name = "sep_target")
-    private Integer sep = 0;
+    @Column(name = "deviation")
+    private Integer deviation = 0; // Calculated: plannedTarget - achievedTarget
     
-    @Column(name = "oct_target")
-    private Integer oct = 0;
+    @Column(name = "achievement_percentage")
+    private Double achievementPercentage = 0.0; // Calculated: (achievedTarget/plannedTarget) * 100
     
-    @Column(name = "nov_target")
-    private Integer nov = 0;
+    @Column(name = "deviation_reason", columnDefinition = "TEXT")
+    private String deviationReason; // Explanation for deviation during MIS submission
     
-    @Column(name = "dec_target")
-    private Integer dec = 0;
+    @Column(name = "mitigation_plan", columnDefinition = "TEXT")
+    private String mitigationPlan; // Plan to address deviation
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        calculatePerformanceMetrics();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+        calculatePerformanceMetrics();
+    }
+    
+    // Auto-calculate performance metrics
+    private void calculatePerformanceMetrics() {
+        if (plannedTarget != null && achievedTarget != null) {
+            this.deviation = plannedTarget - achievedTarget;
+            if (plannedTarget > 0) {
+                this.achievementPercentage = (achievedTarget.doubleValue() / plannedTarget.doubleValue()) * 100;
+            }
+        }
+    }
     
     // Default constructor
     public MonthlyTarget() {}
+    
+    // Constructor for project creation
+    public MonthlyTarget(BudgetAllocationItem budgetAllocationItem, Project project, 
+                        LocalDate targetMonth, Integer plannedTarget, String targetDescription) {
+        this.budgetAllocationItem = budgetAllocationItem;
+        this.project = project;
+        this.targetMonth = targetMonth;
+        this.plannedTarget = plannedTarget;
+        this.targetDescription = targetDescription;
+        this.achievedTarget = 0;
+    }
 
-    // Getters
-    public Integer getJan() { return jan; }
-    public Integer getFeb() { return feb; }
-    public Integer getMar() { return mar; }
-    public Integer getApr() { return apr; }
-    public Integer getMay() { return may; }
-    public Integer getJune() { return june; }
-    public Integer getJuly() { return july; }
-    public Integer getAug() { return aug; }
-    public Integer getSep() { return sep; }
-    public Integer getOct() { return oct; }
-    public Integer getNov() { return nov; }
-    public Integer getDec() { return dec; }
-
-    // Setters
-    public void setJan(Integer jan) { this.jan = jan; }
-    public void setFeb(Integer feb) { this.feb = feb; }
-    public void setMar(Integer mar) { this.mar = mar; }
-    public void setApr(Integer apr) { this.apr = apr; }
-    public void setMay(Integer may) { this.may = may; }
-    public void setJune(Integer june) { this.june = june; }
-    public void setJuly(Integer july) { this.july = july; }
-    public void setAug(Integer aug) { this.aug = aug; }
-    public void setSep(Integer sep) { this.sep = sep; }
-    public void setOct(Integer oct) { this.oct = oct; }
-    public void setNov(Integer nov) { this.nov = nov; }
-    public void setDec(Integer dec) { this.dec = dec; }
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public BudgetAllocationItem getBudgetAllocationItem() { return budgetAllocationItem; }
+    public void setBudgetAllocationItem(BudgetAllocationItem budgetAllocationItem) { this.budgetAllocationItem = budgetAllocationItem; }
+    
+    public Project getProject() { return project; }
+    public void setProject(Project project) { this.project = project; }
+    
+    public LocalDate getTargetMonth() { return targetMonth; }
+    public void setTargetMonth(LocalDate targetMonth) { this.targetMonth = targetMonth; }
+    
+    public Integer getPlannedTarget() { return plannedTarget; }
+    public void setPlannedTarget(Integer plannedTarget) { this.plannedTarget = plannedTarget; }
+    
+    public String getTargetDescription() { return targetDescription; }
+    public void setTargetDescription(String targetDescription) { this.targetDescription = targetDescription; }
+    
+    public Integer getAchievedTarget() { return achievedTarget; }
+    public void setAchievedTarget(Integer achievedTarget) { this.achievedTarget = achievedTarget; }
+    
+    public Integer getDeviation() { return deviation; }
+    public void setDeviation(Integer deviation) { this.deviation = deviation; }
+    
+    public Double getAchievementPercentage() { return achievementPercentage; }
+    public void setAchievementPercentage(Double achievementPercentage) { this.achievementPercentage = achievementPercentage; }
+    
+    public String getDeviationReason() { return deviationReason; }
+    public void setDeviationReason(String deviationReason) { this.deviationReason = deviationReason; }
+    
+    public String getMitigationPlan() { return mitigationPlan; }
+    public void setMitigationPlan(String mitigationPlan) { this.mitigationPlan = mitigationPlan; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     @Override
     public String toString() {
         return "MonthlyTarget{" +
-                "jan=" + jan +
-                ", feb=" + feb +
-                ", mar=" + mar +
-                ", apr=" + apr +
-                ", may=" + may +
-                ", june=" + june +
-                ", july=" + july +
-                ", aug=" + aug +
-                ", sep=" + sep +
-                ", oct=" + oct +
-                ", nov=" + nov +
-                ", dec=" + dec +
+                "id=" + id +
+                ", targetMonth=" + targetMonth +
+                ", plannedTarget=" + plannedTarget +
+                ", achievedTarget=" + achievedTarget +
+                ", achievementPercentage=" + achievementPercentage +
                 '}';
     }
 }

@@ -1,8 +1,10 @@
 package com.cmsfoundation.misportal.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "budget_allocation_items")
@@ -13,12 +15,10 @@ public class BudgetAllocationItem {
     private Long id;
     
     // MANY-TO-ONE relationship with Project
-    // Each budget item belongs to ONE project
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     @JsonBackReference("project-budgetItems")
     private Project project;
-
     
     @Column(name = "sr_no")
     private String srNo;
@@ -50,10 +50,16 @@ public class BudgetAllocationItem {
     @Column(name = "beneficiary_contribution")
     private Double beneficiaryContribution;
     
-    // THIS IS THE KEY - Each item is categorized under one of the 8 budget heads
+    // Each item is categorized under one of the 8 budget heads
     @Column(name = "budget_type")
     @Enumerated(EnumType.STRING)
     private BudgetHead budgetType;
+    
+    // NEW: One-to-Many relationship with MonthlyTargets
+    // Each budget item has monthly targets throughout project lifecycle
+    @OneToMany(mappedBy = "budgetAllocationItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("budgetItem-monthlyTargets")
+    private List<MonthlyTarget> monthlyTargets;
     
     // Default constructor
     public BudgetAllocationItem() {}
@@ -106,6 +112,9 @@ public class BudgetAllocationItem {
     
     public BudgetHead getBudgetType() { return budgetType; }
     public void setBudgetType(BudgetHead budgetType) { this.budgetType = budgetType; }
+    
+    public List<MonthlyTarget> getMonthlyTargets() { return monthlyTargets; }
+    public void setMonthlyTargets(List<MonthlyTarget> monthlyTargets) { this.monthlyTargets = monthlyTargets; }
 
     @Override
     public String toString() {
