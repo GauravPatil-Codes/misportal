@@ -2,10 +2,9 @@ package com.cmsfoundation.misportal.services;
 
 import com.cmsfoundation.misportal.entities.Project;
 import com.cmsfoundation.misportal.entities.BudgetAllocationItem;
-
+import com.cmsfoundation.misportal.entities.BudgetHead;
+import com.cmsfoundation.misportal.entities.MonthlyTarget;
 import com.cmsfoundation.misportal.dtos.ProjectCreateRequest;
-import com.cmsfoundation.misportal.dtos.BudgetAllocationItemDTO;
-import com.cmsfoundation.misportal.dtos.MonthlyTargetItemDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -13,18 +12,28 @@ import java.util.Optional;
 
 public interface ProjectService {
     
-    // CRUD Operations
+    // ========== BASIC CRUD OPERATIONS ==========
     Project createProject(Project project);
-    Project createProjectWithDetails(ProjectCreateRequest request); // NEW method for full creation
+    Project createProjectWithDetails(ProjectCreateRequest request);
     List<Project> getAllProjects();
     Optional<Project> getProjectById(Long id);
     Project updateProject(Long id, Project project);
+    Project updateProjectWithDetails(Long id, ProjectCreateRequest request);
     void deleteProject(Long id);
     
-    // Business Operations
-    Double getTotalBudgetProject();
-    Double getBudgetUtilizedProject();
-    Integer getTotalBeneficiariesProject();
+    // ========== BUDGET & TARGET OPERATIONS ==========
+    List<BudgetAllocationItem> getBudgetAllocationItemsByProject(Long projectId);
+    List<BudgetAllocationItem> getBudgetAllocationItemsByProjectAndBudgetHead(Long projectId, BudgetHead budgetHead);
+    Map<BudgetHead, Double> getBudgetSummaryByProject(Long projectId);
+    List<MonthlyTarget> getMonthlyTargetsByProject(Long projectId);
+    List<MonthlyTarget> getMonthlyTargetsByBudgetItem(Long budgetItemId);
+    Map<String, Object> getProjectPerformanceMetrics(Long projectId);
+    Project recalculateBudgetSummary(Long projectId);
+    
+    // ========== BUSINESS ANALYTICS ==========
+    Double getTotalBudget();
+    Double getBudgetUtilized();
+    Integer getTotalBeneficiaries();
     List<Project> searchProjectByString(String searchTerm);
     List<Project> getProjectByStatus(String status);
     List<Project> getProjectByTheme(String theme);

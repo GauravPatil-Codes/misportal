@@ -26,7 +26,8 @@ public class MisportalApplication {
 			                    "https://127.0.0.1:5500",
 								"https://lakhpatididi.in",
 								"https://lakhpatididi.in/",
-								"https://lovable.dev/"
+								"https://loveable.dev", 
+								"https://cms-csr-connect.lovable.app/"
 			                   
 
 						).allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH").allowedHeaders("*")
