@@ -1,6 +1,9 @@
 package com.cmsfoundation.misportal.repositories;
 
 import com.cmsfoundation.misportal.entities.MISReport;
+import com.cmsfoundation.misportal.entities.Project;
+import com.cmsfoundation.misportal.entities.ReportStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,11 +16,11 @@ import java.util.Optional;
 @Repository
 public interface MISReportRepository extends JpaRepository<MISReport, Long> {
     
-    // Find MIS report by ID
-    Optional<MISReport> findById(Long id);
+    // ✅ CORRECTED: Use Project entity, not String
+    List<MISReport> findByProject(Project project);
     
-    // Find reports by project
-    List<MISReport> findByProject(String project);
+    // ✅ RECOMMENDED: Find by project ID (easier to use)
+    List<MISReport> findByProjectId(Long projectId);
     
     // Find reports by reporting period
     List<MISReport> findByReportingPeriod(String reportingPeriod);
@@ -30,7 +33,19 @@ public interface MISReportRepository extends JpaRepository<MISReport, Long> {
     @Query("SELECT m FROM MISReport m WHERE CAST(m.achievementPercentage AS DOUBLE) BETWEEN :minPercentage AND :maxPercentage")
     List<MISReport> getReportsByAchievementRange(@Param("minPercentage") double minPercentage, @Param("maxPercentage") double maxPercentage);
     
-    // Count reports by project
+    // ✅ CORRECTED: Use Project entity parameter
     @Query("SELECT COUNT(m) FROM MISReport m WHERE m.project = :project")
-    Long countReportsByProject(@Param("project") String project);
+    Long countReportsByProject(@Param("project") Project project);
+    
+    // ✅ NEW: Count by project ID (more practical)
+    Long countByProjectId(Long projectId);
+    
+    // Your existing methods (these are correct)
+    List<MISReport> findByProjectNgoPartnerId(Long ngoId);
+    List<MISReport> findBySubmittedById(Long userId);
+    List<MISReport> findByReportStatus(ReportStatus status);
+    List<MISReport> findByProjectIdAndReportStatus(Long projectId, ReportStatus status);
+    
+    @Query("SELECT mr FROM MISReport mr WHERE mr.project.ngoPartner.id = :ngoId AND mr.reportStatus = :status")
+    List<MISReport> findByNgoIdAndStatus(@Param("ngoId") Long ngoId, @Param("status") ReportStatus status);
 }

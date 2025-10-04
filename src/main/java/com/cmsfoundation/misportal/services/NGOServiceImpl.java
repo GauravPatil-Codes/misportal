@@ -3,15 +3,23 @@ package com.cmsfoundation.misportal.services;
 import com.cmsfoundation.misportal.entities.NGO;
 import com.cmsfoundation.misportal.entities.Project;
 import com.cmsfoundation.misportal.entities.QuickUpdate;
+import com.cmsfoundation.misportal.entities.User;
 import com.cmsfoundation.misportal.repositories.NGORepository;
 import com.cmsfoundation.misportal.repositories.ProjectRepository;
 import com.cmsfoundation.misportal.repositories.QuickUpdateRepository;
+import com.cmsfoundation.misportal.repositories.UserRepository;
 import com.cmsfoundation.misportal.services.NGOService;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class NGOServiceImpl implements NGOService {
@@ -122,10 +130,9 @@ public class NGOServiceImpl implements NGOService {
     
     @Override
     public List<Project> getProjectsByNGO(Long ngoId) {
-        // Find NGO first to get the name
         Optional<NGO> ngo = ngoRepository.findById(ngoId);
         if (ngo.isPresent()) {
-            return projectRepository.findByProjectNgoPartner(ngo.get().getNgoName());
+            return projectRepository.findByNgoPartnerId(ngoId); 
         }
         throw new RuntimeException("NGO not found with id: " + ngoId);
     }
@@ -159,5 +166,73 @@ public class NGOServiceImpl implements NGOService {
     @Override
     public List<NGO> searchNGOByString(String searchTerm) {
         return ngoRepository.searchNGOByString(searchTerm);
+    }
+    
+    @Autowired
+    private UserRepository userRepository;  // Add this field at the top with other @Autowired fields
+
+    // Add these methods at the end of the class
+
+    @Override
+    public Map<String, Object> getNGOCompleteData(Long id) {
+        NGO ngo = ngoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("NGO not found"));
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("ngo", ngo);
+        data.put("projects", getProjectsByNGO(id));
+        data.put("users", getNGOUsers(id));
+        data.put("rating", getNGORatingByQuickUpdates(id));
+        
+        return data;
+    }
+
+    @Override
+    public Map<String, Object> getNGODashboard(Long id) {
+        NGO ngo = ngoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("NGO not found"));
+        
+        List<Project> projects = getProjectsByNGO(id);
+        List<User> users = getNGOUsers(id);
+        
+        Map<String, Object> dashboard = new HashMap<>();
+        dashboard.put("ngo", ngo);
+        dashboard.put("totalProjects", projects.size());
+        dashboard.put("totalUsers", users.size());
+        dashboard.put("rating", getNGORatingByQuickUpdates(id));
+        dashboard.put("recentProjects", projects.stream().limit(5).collect(Collectors.toList()));
+        
+        return dashboard;
+    }
+
+    @Override
+    public List<User> getNGOUsers(Long id) {
+        return userRepository.findByNgoId(id);
+    }
+
+    @Override
+    @Transactional
+    public User assignUserToNGO(Long ngoId, Long userId) {
+        NGO ngo = ngoRepository.findById(ngoId)
+            .orElseThrow(() -> new RuntimeException("NGO not found"));
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        user.setNgo(ngo);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public List<Map<String, Object>> getAllNGOsWithPerformance() {
+        List<NGO> ngos = ngoRepository.findAll();
+        return ngos.stream()
+            .map(ngo -> {
+                Map<String, Object> ngoData = new HashMap<>();
+                ngoData.put("ngo", ngo);
+                ngoData.put("rating", getNGORatingByQuickUpdates(ngo.getId()));
+                ngoData.put("projectCount", getProjectsByNGO(ngo.getId()).size());
+                return ngoData;
+            })
+            .collect(Collectors.toList());
     }
 }

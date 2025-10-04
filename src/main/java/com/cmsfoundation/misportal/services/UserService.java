@@ -1,8 +1,10 @@
 package com.cmsfoundation.misportal.services;
 
+import com.cmsfoundation.misportal.dtos.UserRegistrationRequest;
 import com.cmsfoundation.misportal.entities.User;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface UserService {
@@ -18,4 +20,7 @@ public interface UserService {
     Optional<User> getUserByEmailId(String emailId);
     boolean validateUser(String emailId, String password);
     Optional<User> authenticateUser(String emailId, String password);
+	User registerUser(UserRegistrationRequest request);
+	Map<String, Object> getUserPermissions(User user);
+	
 }

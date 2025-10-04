@@ -1,6 +1,8 @@
 package com.cmsfoundation.misportal.controllers;
 
+import com.cmsfoundation.misportal.dtos.MISReportSubmissionRequest;
 import com.cmsfoundation.misportal.entities.MISReport;
+import com.cmsfoundation.misportal.entities.ReportStatus;
 import com.cmsfoundation.misportal.services.MISReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -9,7 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -68,12 +72,6 @@ public class MISReportController {
     
     // Business Operations
     
-    @GetMapping("/project/{project}")
-    public ResponseEntity<List<MISReport>> getReportsByProject(@PathVariable String project) {
-        List<MISReport> reports = misReportService.getReportsByProject(project);
-        return new ResponseEntity<>(reports, HttpStatus.OK);
-    }
-    
     @GetMapping("/date-range")
     public ResponseEntity<List<MISReport>> getReportsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
@@ -90,9 +88,99 @@ public class MISReportController {
         return new ResponseEntity<>(reports, HttpStatus.OK);
     }
     
-    @GetMapping("/count/project/{project}")
-    public ResponseEntity<Long> countReportsByProject(@PathVariable String project) {
-        Long count = misReportService.countReportsByProject(project);
+    // Using project ID for project-specific queries and counts
+    
+    @GetMapping("/count/project/{projectId}")
+    public ResponseEntity<Long> countReportsByProject(@PathVariable Long projectId) {
+        Long count = misReportService.countByProjectId(projectId);
         return new ResponseEntity<>(count, HttpStatus.OK);
+    }
+
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<MISReport>> getMISReportsByProject(@PathVariable Long projectId) {
+        List<MISReport> reports = misReportService.getMISReportsByProject(projectId);
+        return new ResponseEntity<>(reports, HttpStatus.OK);
+    }
+
+    // Submit MIS report with validation
+
+    @PostMapping("/submit")
+    public ResponseEntity<Map<String, Object>> submitMISReport(@RequestBody MISReportSubmissionRequest request) {
+        try {
+            MISReport savedReport = misReportService.submitMISReport(request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "MIS Report submitted successfully");
+            response.put("reportId", savedReport.getId());
+            response.put("status", savedReport.getReportStatus());
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (SecurityException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Access denied: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Failed to submit report: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    // Get MIS reports by NGO
+    
+    @GetMapping("/ngo/{ngoId}")
+    public ResponseEntity<List<MISReport>> getMISReportsByNGO(@PathVariable Long ngoId) {
+        List<MISReport> reports = misReportService.getMISReportsByNGO(ngoId);
+        return new ResponseEntity<>(reports, HttpStatus.OK);
+    }
+    
+    // Approve MIS report
+    
+    @PutMapping("/{reportId}/approve")
+    public ResponseEntity<Map<String, Object>> approveMISReport(
+            @PathVariable Long reportId, 
+            @RequestBody Map<String, Object> approvalData) {
+        try {
+            Long approverId = ((Number) approvalData.get("approverId")).longValue();
+            String comments = (String) approvalData.get("comments");
+            MISReport approvedReport = misReportService.approveMISReport(reportId, approverId, comments);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Report approved successfully");
+            response.put("report", approvedReport);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (SecurityException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Access denied: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Approval failed: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    // Get pending reports for approval
+    
+    @GetMapping("/pending-approval")
+    public ResponseEntity<List<MISReport>> getPendingReports() {
+        List<MISReport> pendingReports = misReportService.getPendingReports();
+        return new ResponseEntity<>(pendingReports, HttpStatus.OK);
+    }
+    
+    // Get reports by status
+    
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<MISReport>> getReportsByStatus(@PathVariable String status) {
+        try {
+            ReportStatus reportStatus = ReportStatus.valueOf(status.toUpperCase());
+            List<MISReport> reports = misReportService.getReportsByStatus(reportStatus);
+            return new ResponseEntity<>(reports, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -1,15 +1,19 @@
 package com.cmsfoundation.misportal.services;
 
 import com.cmsfoundation.misportal.entities.Project;
+import com.cmsfoundation.misportal.entities.User;
 import com.cmsfoundation.misportal.entities.BudgetAllocationItem;
 import com.cmsfoundation.misportal.entities.BudgetHead;
 import com.cmsfoundation.misportal.entities.MonthlyTarget;
+import com.cmsfoundation.misportal.entities.NGO;
 import com.cmsfoundation.misportal.entities.Budget;
 import com.cmsfoundation.misportal.dtos.ProjectCreateRequest;
 import com.cmsfoundation.misportal.dtos.BudgetAllocationItemDTO;
 import com.cmsfoundation.misportal.dtos.MonthlyTargetItemDTO;
 import com.cmsfoundation.misportal.repositories.ProjectRepository;
+import com.cmsfoundation.misportal.repositories.UserRepository;
 import com.cmsfoundation.misportal.repositories.MonthlyTargetRepository;
+import com.cmsfoundation.misportal.repositories.NGORepository;
 import com.cmsfoundation.misportal.repositories.BudgetAllocationItemRepository; // ✅ ADDED
 import com.cmsfoundation.misportal.services.BudgetAllocationItemService;
 
@@ -39,6 +43,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     private BudgetAllocationItemService budgetAllocationItemService;
+    
+    @Autowired
+    private NGORepository ngoRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     @Transactional
@@ -554,7 +564,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<Project> getProjectByNGO(String ngoPartner) {
-        return projectRepository.findByProjectNgoPartner(ngoPartner);
+        return projectRepository.findByNgoPartnerNgoName(ngoPartner);
     }
 
     @Override
@@ -602,6 +612,121 @@ public class ProjectServiceImpl implements ProjectService {
 
             project.getBudget().calculateTotalsFromItems(project.getBudgetAllocationItems());
             return projectRepository.save(project);
+        }
+        throw new RuntimeException("Project not found with id: " + projectId);
+    }
+    
+    
+ // ✅ NEW: Get projects by NGO
+    @Override
+    public List<Project> getProjectsByNGOId(Long ngoId) {
+        return projectRepository.findByNgoPartnerId(ngoId);
+    }
+    
+    @Override
+    public List<Project> getProjectsByNGOName(String ngoName) {
+        return projectRepository.findByNgoPartnerNgoName(ngoName);
+    }
+    
+    // ✅ NEW: Get projects by manager
+    @Override
+    public List<Project> getProjectsByManager(Long userId) {
+        return projectRepository.findByProjectManagerId(userId);
+    }
+    
+    // ✅ NEW: Create project with NGO assignment
+    @Override
+    @Transactional
+    public Project createProjectWithNGO(ProjectCreateRequest request) {
+        Project project = createProjectWithDetails(request);
+        
+        // Assign NGO if specified
+        if (request.getNgoPartnerId() != null) {
+            Optional<NGO> ngoOpt = ngoRepository.findById(request.getNgoPartnerId());
+            if (ngoOpt.isPresent()) {
+                project.setNgoPartner(ngoOpt.get());
+            }
+        }
+        
+        // Assign Project Manager if specified
+        if (request.getProjectManagerId() != null) {
+            Optional<User> managerOpt = userRepository.findById(request.getProjectManagerId());
+            if (managerOpt.isPresent()) {
+                project.setProjectManager(managerOpt.get());
+            }
+        }
+        
+        return projectRepository.save(project);
+    }
+    
+    // ✅ NEW: Assign NGO to existing project
+    @Override
+    @Transactional
+    public Project assignNGOToProject(Long projectId, Long ngoId) {
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new RuntimeException("Project not found"));
+        
+        NGO ngo = ngoRepository.findById(ngoId)
+            .orElseThrow(() -> new RuntimeException("NGO not found"));
+        
+        project.setNgoPartner(ngo);
+        return projectRepository.save(project);
+    }
+    
+    // ✅ NEW: Get NGO performance for project
+    @Override
+    public Map<String, Object> getProjectNGOPerformance(Long projectId) {
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
+        if (projectOpt.isPresent() && projectOpt.get().getNgoPartner() != null) {
+            Project project = projectOpt.get();
+            NGO ngo = project.getNgoPartner();
+            
+            Map<String, Object> performance = new HashMap<>();
+            performance.put("ngoName", ngo.getNgoName());
+            performance.put("ngoId", ngo.getId());
+            performance.put("projectPerformance", project.getCurrentAchievementPercentage());
+            performance.put("ngoOverallMetrics", ngo.getNGOPerformanceMetrics());
+            performance.put("financialPerformance", project.getFinancialPerformance());
+            
+            return performance;
+        }
+        throw new RuntimeException("Project not found or no NGO assigned");
+    }
+    
+    // ✅ NEW: Get NGO project dashboard
+    @Override
+    public Map<String, Object> getNGOProjectDashboard(Long ngoId) {
+        NGO ngo = ngoRepository.findById(ngoId)
+            .orElseThrow(() -> new RuntimeException("NGO not found"));
+        
+        List<Project> projects = projectRepository.findByNgoPartnerId(ngoId);
+        
+        Map<String, Object> dashboard = new HashMap<>();
+        dashboard.put("ngo", ngo);
+        dashboard.put("totalProjects", projects.size());
+        dashboard.put("activeProjects", projects.stream()
+            .filter(p -> "ACTIVE".equalsIgnoreCase(p.getProjectStatus()))
+            .count());
+        dashboard.put("completedProjects", projects.stream()
+            .filter(p -> "COMPLETED".equalsIgnoreCase(p.getProjectStatus()))
+            .count());
+        dashboard.put("totalBudget", projects.stream()
+            .mapToDouble(Project::getTotalBudgetFromItems)
+            .sum());
+        dashboard.put("avgPerformance", projects.stream()
+        	    .mapToDouble(Project::getCurrentAchievementPercentage)  // ✅ FIXED: Changed from getCurrentAchievementPerformance
+        	    .average().orElse(0.0));
+        dashboard.put("projects", projects);
+        
+        return dashboard;
+    }
+    
+    @Override
+    public Map<String, Object> getProjectFinancialPerformance(Long projectId) {
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
+        if (projectOpt.isPresent()) {
+            Project project = projectOpt.get();
+            return project.getFinancialPerformance();
         }
         throw new RuntimeException("Project not found with id: " + projectId);
     }

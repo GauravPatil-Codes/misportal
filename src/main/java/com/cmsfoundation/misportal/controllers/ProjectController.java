@@ -250,4 +250,70 @@ public class ProjectController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    
+    
+ // ✅ NEW: Get projects by NGO ID
+    @GetMapping("/ngo/{ngoId}")
+    public ResponseEntity<List<Project>> getProjectsByNGO(@PathVariable Long ngoId) {
+        List<Project> projects = projectService.getProjectsByNGOId(ngoId);
+        return new ResponseEntity<>(projects, HttpStatus.OK);
+    }
+    
+    // ✅ NEW: Get projects by NGO name
+    @GetMapping("/ngo/name/{ngoName}")
+    public ResponseEntity<List<Project>> getProjectsByNGOName(@PathVariable String ngoName) {
+        List<Project> projects = projectService.getProjectsByNGOName(ngoName);
+        return new ResponseEntity<>(projects, HttpStatus.OK);
+    }
+    
+    // ✅ NEW: Get projects managed by user
+    @GetMapping("/manager/{userId}")
+    public ResponseEntity<List<Project>> getProjectsByManager(@PathVariable Long userId) {
+        List<Project> projects = projectService.getProjectsByManager(userId);
+        return new ResponseEntity<>(projects, HttpStatus.OK);
+    }
+    
+    // ✅ NEW: Get NGO performance metrics for specific project
+    @GetMapping("/{id}/ngo-performance")
+    public ResponseEntity<Map<String, Object>> getProjectNGOPerformance(@PathVariable Long id) {
+        Map<String, Object> performance = projectService.getProjectNGOPerformance(id);
+        return new ResponseEntity<>(performance, HttpStatus.OK);
+    }
+    
+    // ✅ NEW: Get financial performance metrics
+    @GetMapping("/{id}/financial-performance")
+    public ResponseEntity<Map<String, Object>> getProjectFinancialPerformance(@PathVariable Long id) {
+        Map<String, Object> performance = projectService.getProjectFinancialPerformance(id);
+        return new ResponseEntity<>(performance, HttpStatus.OK);
+    }
+    
+    // ✅ ENHANCED: Create project with NGO assignment
+    @PostMapping("/with-ngo")
+    public ResponseEntity<Project> createProjectWithNGO(@RequestBody ProjectCreateRequest request) {
+        try {
+            Project savedProject = projectService.createProjectWithNGO(request);
+            return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    // ✅ NEW: Assign NGO to existing project
+    @PutMapping("/{projectId}/assign-ngo/{ngoId}")
+    public ResponseEntity<Project> assignNGOToProject(@PathVariable Long projectId, @PathVariable Long ngoId) {
+        try {
+            Project updatedProject = projectService.assignNGOToProject(projectId, ngoId);
+            return new ResponseEntity<>(updatedProject, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    
+    // ✅ NEW: Get project dashboard data for NGO
+    @GetMapping("/dashboard/ngo/{ngoId}")
+    public ResponseEntity<Map<String, Object>> getNGOProjectDashboard(@PathVariable Long ngoId) {
+        Map<String, Object> dashboard = projectService.getNGOProjectDashboard(ngoId);
+        return new ResponseEntity<>(dashboard, HttpStatus.OK);
+    }
 }

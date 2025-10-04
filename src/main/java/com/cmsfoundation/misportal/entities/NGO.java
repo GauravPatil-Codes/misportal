@@ -3,6 +3,11 @@ package com.cmsfoundation.misportal.entities;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "ngos")
@@ -12,8 +17,48 @@ public class NGO {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "ngo_name")
+    
+    
+    @Column(name = "ngo_name", unique = true)
     private String ngoName;
+    
+    // ✅ NEW: Relationships
+    @OneToMany(mappedBy = "ngoPartner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("ngo-projects")
+    private List<Project> projects;
+    
+    @OneToMany(mappedBy = "ngo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("ngo-users")
+    private List<User> ngoUsers;
+    
+    // ✅ NEW: Performance metrics for NGO
+    public Map<String, Object> getNGOPerformanceMetrics() {
+        if (projects == null || projects.isEmpty()) {
+            return Map.of("totalProjects", 0, "avgPerformance", 0.0);
+        }
+        
+        Map<String, Object> metrics = new HashMap<>();
+        metrics.put("totalProjects", projects.size());
+        metrics.put("activeProjects", projects.stream()
+            .filter(p -> "ACTIVE".equalsIgnoreCase(p.getProjectStatus()))
+            .count());
+        metrics.put("avgPerformance", projects.stream()
+            .mapToDouble(Project::getCurrentAchievementPercentage)
+            .average().orElse(0.0));
+        metrics.put("totalBudgetManaged", projects.stream()
+            .mapToDouble(Project::getTotalBudgetFromItems)
+            .sum());
+            
+        return metrics;
+    }
+    
+    // Existing fields and new getters/setters
+    public List<Project> getProjects() { return projects; }
+    public void setProjects(List<Project> projects) { this.projects = projects; }
+    
+    public List<User> getNgoUsers() { return ngoUsers; }
+    public void setNgoUsers(List<User> ngoUsers) { this.ngoUsers = ngoUsers; }
+    
     
     @Column(name = "location")
     private String location;
