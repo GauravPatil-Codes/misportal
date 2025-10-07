@@ -11,35 +11,39 @@ public class UserLoginSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
+    @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
     
-    @Column(nullable = false, unique = true)
+    @Column(name = "session_token", unique = true, nullable = false)
     private String sessionToken;
     
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-    
-    @Column(nullable = false)
-    private LocalDateTime expiresAt;
-    
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
     
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
+    
+    @Column(name = "device_info")
     private String deviceInfo;
+    
+    @Column(name = "ip_address")
     private String ipAddress;
     
-    // Constructors, getters, setters...
+    // Constructors
     public UserLoginSession() {}
     
     public UserLoginSession(String phoneNumber, String sessionToken, LocalDateTime expiresAt) {
         this.phoneNumber = phoneNumber;
         this.sessionToken = sessionToken;
-        this.createdAt = LocalDateTime.now();
         this.expiresAt = expiresAt;
+        this.isActive = true;
+        this.createdAt = LocalDateTime.now();
     }
     
-    // Getters and setters...
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
@@ -49,14 +53,14 @@ public class UserLoginSession {
     public String getSessionToken() { return sessionToken; }
     public void setSessionToken(String sessionToken) { this.sessionToken = sessionToken; }
     
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean active) { isActive = active; }
+    
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
-    
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
     
     public String getDeviceInfo() { return deviceInfo; }
     public void setDeviceInfo(String deviceInfo) { this.deviceInfo = deviceInfo; }

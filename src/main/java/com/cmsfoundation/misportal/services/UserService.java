@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface UserService {
     
     // CRUD Operations
-    User createUser(User user);
+    
     List<User> getAllUsers();
     Optional<User> getUserById(Long id);
     User updateUser(Long id, User user);

@@ -209,6 +209,52 @@ class MediaFiles {
     @Column(name = "media_file_3")
     private String mediaFile3;
     
-    // Default constructor
+    
+    public String getMediaFile1() {
+		return mediaFile1;
+	}
+
+
+	public void setMediaFile1(String mediaFile1) {
+		this.mediaFile1 = mediaFile1;
+	}
+
+
+	public String getMediaFile2() {
+		return mediaFile2;
+	}
+
+
+	public void setMediaFile2(String mediaFile2) {
+		this.mediaFile2 = mediaFile2;
+	}
+
+
+	public String getMediaFile3() {
+		return mediaFile3;
+	}
+
+
+	public void setMediaFile3(String mediaFile3) {
+		this.mediaFile3 = mediaFile3;
+	}
+
+
+	@Override
+	public String toString() {
+		return "MediaFiles [mediaFile1=" + mediaFile1 + ", mediaFile2=" + mediaFile2 + ", mediaFile3=" + mediaFile3
+				+ "]";
+	}
+
+
+	public MediaFiles(String mediaFile1, String mediaFile2, String mediaFile3) {
+		super();
+		this.mediaFile1 = mediaFile1;
+		this.mediaFile2 = mediaFile2;
+		this.mediaFile3 = mediaFile3;
+	}
+
+
+	// Default constructor
     public MediaFiles() {}
 }

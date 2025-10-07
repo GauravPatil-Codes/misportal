@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;  // ✅ ADD THIS IMPORT
 
 @Entity
 @Table(name = "users")
@@ -24,6 +25,7 @@ public class User {
     private String emailId;
     
     @Column(name = "password")
+    @JsonIgnore  // ✅ ADD THIS - Never serialize password
     private String password;
     
     @Column(name = "phone_number")
@@ -39,13 +41,15 @@ public class User {
     private NGO ngo;
     
     @OneToMany(mappedBy = "projectManager", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("manager-projects")
+    @JsonIgnore  // ✅ CHANGE THIS - Replace @JsonManagedReference with @JsonIgnore
     private List<Project> managedProjects;
     
     @Column(name = "otp_code")
+    @JsonIgnore  // ✅ ADD THIS - Never serialize OTP
     private String otpCode;
     
     @Column(name = "otp_expiry")
+    @JsonIgnore  // ✅ ADD THIS - Never serialize OTP expiry
     private LocalDateTime otpExpiry;
     
     @Column(name = "is_verified")
@@ -88,7 +92,7 @@ public class User {
         return userRole == UserRole.CMS_SUPER_ADMIN || userRole == UserRole.CMS_PROJECT_MANAGER;
     }
     
-    // Getters and setters
+    // All your existing getters and setters - KEEP THEM ALL AS IS
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
@@ -134,40 +138,38 @@ public class User {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-	public User(Long id, String firstName, String lastName, String emailId, String password, String phoneNumber,
-			UserRole userRole, NGO ngo, List<Project> managedProjects, String otpCode, LocalDateTime otpExpiry,
-			Boolean isVerified, Boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt) {
-		super();
-		this.id = id;
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.emailId = emailId;
-		this.password = password;
-		this.phoneNumber = phoneNumber;
-		this.userRole = userRole;
-		this.ngo = ngo;
-		this.managedProjects = managedProjects;
-		this.otpCode = otpCode;
-		this.otpExpiry = otpExpiry;
-		this.isVerified = isVerified;
-		this.isActive = isActive;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
-	}
+    // Your existing constructor - KEEP AS IS
+    public User(Long id, String firstName, String lastName, String emailId, String password, String phoneNumber,
+            UserRole userRole, NGO ngo, List<Project> managedProjects, String otpCode, LocalDateTime otpExpiry,
+            Boolean isVerified, Boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        super();
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.emailId = emailId;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.userRole = userRole;
+        this.ngo = ngo;
+        this.managedProjects = managedProjects;
+        this.otpCode = otpCode;
+        this.otpExpiry = otpExpiry;
+        this.isVerified = isVerified;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 
-	@Override
-	public String toString() {
-		return "User [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", emailId=" + emailId
-				+ ", password=" + password + ", phoneNumber=" + phoneNumber + ", userRole=" + userRole + ", ngo=" + ngo
-				+ ", managedProjects=" + managedProjects + ", otpCode=" + otpCode + ", otpExpiry=" + otpExpiry
-				+ ", isVerified=" + isVerified + ", isActive=" + isActive + ", createdAt=" + createdAt + ", updatedAt="
-				+ updatedAt + "]";
-	}
+    @Override
+    public String toString() {
+        // ✅ UPDATED - Remove sensitive fields from toString to prevent logging issues
+        return "User [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", emailId=" + emailId
+                + ", phoneNumber=" + phoneNumber + ", userRole=" + userRole + 
+                ", isVerified=" + isVerified + ", isActive=" + isActive + ", createdAt=" + createdAt + ", updatedAt="
+                + updatedAt + "]";
+    }
 
-	public User() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-    
-    
+    public User() {
+        super();
+    }
 }

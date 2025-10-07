@@ -1,5 +1,6 @@
 package com.cmsfoundation.misportal.controllers;
 
+import com.cmsfoundation.misportal.dtos.UserRegistrationRequest;
 import com.cmsfoundation.misportal.entities.User;
 import com.cmsfoundation.misportal.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,17 +22,11 @@ public class UserController {
     
     // CRUD Operations
     
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        try {
-            User savedUser = userService.createUser(user);
-            return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT); // Email already exists
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@RequestBody UserRegistrationRequest req) {
+        User created = userService.registerUser(req);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }    
     
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {

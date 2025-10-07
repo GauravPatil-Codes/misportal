@@ -27,14 +27,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private NGORepository ngoRepository;
     
-    @Override
-    public User createUser(User user) {
-        // Check if email already exists
-        if (userRepository.existsByEmailId(user.getEmailId())) {
-            throw new RuntimeException("User already exists with email: " + user.getEmailId());
-        }
-        return userRepository.save(user);
-    }
+    
     
     @Override
     public List<User> getAllUsers() {
