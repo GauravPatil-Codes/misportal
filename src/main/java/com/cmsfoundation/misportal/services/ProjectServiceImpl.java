@@ -369,32 +369,55 @@ public class ProjectServiceImpl implements ProjectService {
 
 	        if (existingTarget != null) {
 	            // UPDATE existing monthly target
-	            System.out.println("Updating existing target for: " + targetMonth);
 	            if (providedTarget != null) {
-	                System.out.println("Setting planned target from " + existingTarget.getPlannedTarget() + " to " + providedTarget.getPlannedTarget());
 	                existingTarget.setPlannedTarget(providedTarget.getPlannedTarget());
 	                existingTarget.setTargetDescription(providedTarget.getTargetDescription());
+	                
+	                // 🚨 ADD ALL THESE MISSING UPDATES:
+	                existingTarget.setAchievedTarget(providedTarget.getAchievedTarget());
+	                existingTarget.setDeviation(providedTarget.getDeviation());
+	                existingTarget.setAchievementPercentage(providedTarget.getAchievementPercentage());
+	                existingTarget.setDeviationReason(providedTarget.getDeviationReason());
+	                existingTarget.setMitigationPlan(providedTarget.getMitigationPlan());
 	            } else {
-	                // Set default values if no specific target provided
+	                // Set default values
 	                existingTarget.setPlannedTarget(0);
-	                existingTarget.setTargetDescription("No specific target set for " + month.getMonth() + " " + month.getYear());
+	                existingTarget.setTargetDescription("No specific target set...");
+	                
+	                // 🚨 ADD DEFAULT VALUES FOR MISSING FIELDS:
+	                existingTarget.setAchievedTarget(0);
+	                existingTarget.setDeviation(0);
+	                existingTarget.setAchievementPercentage(0.0);
+	                existingTarget.setDeviationReason(null);
+	                existingTarget.setMitigationPlan(null);
 	            }
 	            targetsToSave.add(existingTarget);
 	        } else {
 	            // CREATE new monthly target
-	            System.out.println("Creating new target for: " + targetMonth);
 	            MonthlyTarget newTarget = new MonthlyTarget();
 	            newTarget.setTargetMonth(targetMonth);
 	            newTarget.setBudgetAllocationItem(budgetItem);
 	            newTarget.setProject(project);
 	            
 	            if (providedTarget != null) {
-	                System.out.println("Setting new planned target: " + providedTarget.getPlannedTarget());
 	                newTarget.setPlannedTarget(providedTarget.getPlannedTarget());
 	                newTarget.setTargetDescription(providedTarget.getTargetDescription());
+	                
+	                // 🚨 ADD ALL MISSING FIELD ASSIGNMENTS:
+	                newTarget.setAchievedTarget(providedTarget.getAchievedTarget());
+	                newTarget.setDeviation(providedTarget.getDeviation());
+	                newTarget.setAchievementPercentage(providedTarget.getAchievementPercentage());
+	                newTarget.setDeviationReason(providedTarget.getDeviationReason());
+	                newTarget.setMitigationPlan(providedTarget.getMitigationPlan());
 	            } else {
+	                // Set defaults for new target
 	                newTarget.setPlannedTarget(0);
-	                newTarget.setTargetDescription("No specific target set for " + month.getMonth() + " " + month.getYear());
+	                newTarget.setTargetDescription("No specific target set...");
+	                newTarget.setAchievedTarget(0);
+	                newTarget.setDeviation(0);
+	                newTarget.setAchievementPercentage(0.0);
+	                newTarget.setDeviationReason(null);
+	                newTarget.setMitigationPlan(null);
 	            }
 	            targetsToSave.add(newTarget);
 	        }

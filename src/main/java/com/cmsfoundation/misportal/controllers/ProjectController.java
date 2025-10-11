@@ -417,15 +417,21 @@ public class ProjectController {
 	                
 	                // Extract monthly targets from budget item
 	                if (item.getMonthlyTargets() != null) {
-	                    System.out.println("Processing " + item.getMonthlyTargets().size() + " monthly targets for item " + item.getSrNo());
 	                    for (MonthlyTarget target : item.getMonthlyTargets()) {
 	                        MonthlyTargetItemDTO targetDTO = new MonthlyTargetItemDTO();
 	                        targetDTO.setTargetMonth(target.getTargetMonth());
 	                        targetDTO.setPlannedTarget(target.getPlannedTarget());
 	                        targetDTO.setTargetDescription(target.getTargetDescription());
 	                        targetDTO.setBudgetAllocationItemSrNo(item.getSrNo());
+	                        
+	                        // 🚨 ADD ALL THESE MISSING EXTRACTIONS:
+	                        targetDTO.setAchievedTarget(target.getAchievedTarget());
+	                        targetDTO.setDeviation(target.getDeviation());
+	                        targetDTO.setAchievementPercentage(target.getAchievementPercentage());
+	                        targetDTO.setDeviationReason(target.getDeviationReason());
+	                        targetDTO.setMitigationPlan(target.getMitigationPlan());
+	                        
 	                        monthlyTargetDTOs.add(targetDTO);
-	                        System.out.println("Extracted target: Month=" + target.getTargetMonth() + ", Planned=" + target.getPlannedTarget());
 	                    }
 	                }
 	            }
