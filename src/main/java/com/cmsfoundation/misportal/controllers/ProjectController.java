@@ -4,15 +4,22 @@ import com.cmsfoundation.misportal.entities.Project;
 import com.cmsfoundation.misportal.entities.BudgetAllocationItem;
 import com.cmsfoundation.misportal.entities.BudgetHead;
 import com.cmsfoundation.misportal.entities.MonthlyTarget;
+import com.cmsfoundation.misportal.dtos.BudgetAllocationItemDTO;
+import com.cmsfoundation.misportal.dtos.BudgetAllocationItemWithTargetsDTO;
+import com.cmsfoundation.misportal.dtos.MonthlyTargetItemDTO;
 import com.cmsfoundation.misportal.dtos.ProjectCreateRequest;
+import com.cmsfoundation.misportal.dtos.ProjectUpdateNestedRequest;
 import com.cmsfoundation.misportal.services.ProjectService; // ✅ CHANGED: Use interface instead of implementation
+
 import com.cmsfoundation.misportal.services.BudgetAllocationItemService;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -316,4 +323,141 @@ public class ProjectController {
         Map<String, Object> dashboard = projectService.getNGOProjectDashboard(ngoId);
         return new ResponseEntity<>(dashboard, HttpStatus.OK);
     }
+    
+    @PutMapping("/{id}/updateNested")
+    public ResponseEntity<Project> updateProjectNested(
+            @PathVariable Long id,
+            @RequestBody ProjectUpdateNestedRequest request) {
+
+        try {
+            List<BudgetAllocationItemDTO> budgetItems = new ArrayList<>();
+            List<MonthlyTargetItemDTO> monthlyTargets = new ArrayList<>();
+
+            if (request.getNestedBudgetAllocationItems() != null) {
+                for (BudgetAllocationItemWithTargetsDTO item : request.getNestedBudgetAllocationItems()) {
+                    BudgetAllocationItemDTO basicItem = new BudgetAllocationItemDTO();
+                    basicItem.setSrNo(item.getSrNo());
+                    basicItem.setItemName(item.getItemName());
+                    basicItem.setDescription(item.getDescription());
+                    basicItem.setUnits(item.getUnits());
+                    basicItem.setUnitCost(item.getUnitCost());
+                    basicItem.setCmsContribution(item.getCmsContribution());
+                    basicItem.setNgoContribution(item.getNgoContribution());
+                    basicItem.setGovernmentContribution(item.getGovernmentContribution());
+                    basicItem.setBeneficiaryContribution(item.getBeneficiaryContribution());
+                    basicItem.setBudgetType(item.getBudgetType());
+                    budgetItems.add(basicItem);
+
+                    if (item.getMonthlyTargets() != null) {
+                        for (MonthlyTargetItemDTO target : item.getMonthlyTargets()) {
+                            target.setBudgetAllocationItemSrNo(item.getSrNo());
+                            monthlyTargets.add(target);
+                        }
+                    }
+                }
+            }
+
+            ProjectCreateRequest convertedRequest = new ProjectCreateRequest();
+            convertedRequest.setId(request.getId());
+            convertedRequest.setProjectType(request.getProjectType());
+            convertedRequest.setProjectHead(request.getProjectHead());
+            convertedRequest.setProjectName(request.getProjectName());
+            convertedRequest.setProjectTheme(request.getProjectTheme());
+            convertedRequest.setExpectedBeneficiaries(request.getExpectedBeneficiaries());
+            convertedRequest.setProjectLocation(request.getProjectLocation());
+            convertedRequest.setProjectStartDate(request.getProjectStartDate());
+            convertedRequest.setProjectEndDate(request.getProjectEndDate());
+            convertedRequest.setProjectDescription(request.getProjectDescription());
+            convertedRequest.setProjectObjectives(request.getProjectObjectives());
+            convertedRequest.setBudget(request.getBudget());
+            convertedRequest.setWorkPlan(request.getWorkPlan());
+            convertedRequest.setProjectStatus(request.getProjectStatus());
+
+            convertedRequest.setBudgetAllocationItems(budgetItems);
+            convertedRequest.setMonthlyTargetItems(monthlyTargets);
+
+            Project updatedProject = projectService.updateProjectWithDetails(id, convertedRequest);
+
+            return ResponseEntity.ok(updatedProject);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+    
+    @PutMapping("/{id}/updateNestedDirect")
+	public ResponseEntity<Project> updateProjectNestedDirect(
+	        @PathVariable Long id,
+	        @RequestBody Project projectWithNestedData) {
+	    try {
+	        System.out.println("=== UPDATE NESTED DIRECT ===");
+	        System.out.println("Project ID: " + id);
+	        
+	        // Extract budget allocation items from the incoming project
+	        List<BudgetAllocationItemDTO> budgetItemDTOs = new ArrayList<>();
+	        List<MonthlyTargetItemDTO> monthlyTargetDTOs = new ArrayList<>();
+	        
+	        if (projectWithNestedData.getBudgetAllocationItems() != null) {
+	            System.out.println("Processing " + projectWithNestedData.getBudgetAllocationItems().size() + " budget items");
+	            for (BudgetAllocationItem item : projectWithNestedData.getBudgetAllocationItems()) {
+	                // Convert entity to DTO
+	                BudgetAllocationItemDTO dto = new BudgetAllocationItemDTO();
+	                dto.setSrNo(item.getSrNo());
+	                dto.setItemName(item.getItemName());
+	                dto.setDescription(item.getDescription());
+	                dto.setUnits(item.getUnits());
+	                dto.setUnitCost(item.getUnitCost());
+	                
+	                dto.setCmsContribution(item.getCmsContribution());
+	                dto.setNgoContribution(item.getNgoContribution());
+	                dto.setGovernmentContribution(item.getGovernmentContribution());
+	                dto.setBeneficiaryContribution(item.getBeneficiaryContribution());
+	                dto.setBudgetType(item.getBudgetType());
+	                budgetItemDTOs.add(dto);
+	                
+	                // Extract monthly targets from budget item
+	                if (item.getMonthlyTargets() != null) {
+	                    System.out.println("Processing " + item.getMonthlyTargets().size() + " monthly targets for item " + item.getSrNo());
+	                    for (MonthlyTarget target : item.getMonthlyTargets()) {
+	                        MonthlyTargetItemDTO targetDTO = new MonthlyTargetItemDTO();
+	                        targetDTO.setTargetMonth(target.getTargetMonth());
+	                        targetDTO.setPlannedTarget(target.getPlannedTarget());
+	                        targetDTO.setTargetDescription(target.getTargetDescription());
+	                        targetDTO.setBudgetAllocationItemSrNo(item.getSrNo());
+	                        monthlyTargetDTOs.add(targetDTO);
+	                        System.out.println("Extracted target: Month=" + target.getTargetMonth() + ", Planned=" + target.getPlannedTarget());
+	                    }
+	                }
+	            }
+	        }
+	        
+	        // Create request object
+	        ProjectCreateRequest convertedRequest = new ProjectCreateRequest();
+	        convertedRequest.setProjectType(projectWithNestedData.getProjectType());
+	        convertedRequest.setProjectHead(projectWithNestedData.getProjectHead());
+	        convertedRequest.setProjectName(projectWithNestedData.getProjectName());
+	        convertedRequest.setProjectTheme(projectWithNestedData.getProjectTheme());
+	        convertedRequest.setExpectedBeneficiaries(projectWithNestedData.getExpectedBeneficiaries());
+	        convertedRequest.setProjectLocation(projectWithNestedData.getProjectLocation());
+	        convertedRequest.setProjectStartDate(projectWithNestedData.getProjectStartDate());
+	        convertedRequest.setProjectEndDate(projectWithNestedData.getProjectEndDate());
+	        convertedRequest.setProjectDescription(projectWithNestedData.getProjectDescription());
+	        convertedRequest.setProjectObjectives(projectWithNestedData.getProjectObjectives());
+	        convertedRequest.setBudget(projectWithNestedData.getBudget());
+	        convertedRequest.setWorkPlan(projectWithNestedData.getWorkPlan());
+	        convertedRequest.setProjectStatus(projectWithNestedData.getProjectStatus());
+	        convertedRequest.setBudgetAllocationItems(budgetItemDTOs);
+	        convertedRequest.setMonthlyTargetItems(monthlyTargetDTOs);
+	        
+	        Project updatedProject = projectService.updateProjectWithDetails(id, convertedRequest);
+	        return ResponseEntity.ok(updatedProject);
+	        
+	    } catch (Exception ex) {
+	        System.out.println("ERROR in updateNestedDirect: " + ex.getMessage());
+	        ex.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+	    }
+	}
+
+
 }

@@ -12,13 +12,12 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 @Entity
 @Table(name = "ngos")
 public class NGO {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    
-    
+
+
     @Column(name = "ngo_name", unique = true)
     private String ngoName;
     
@@ -80,18 +79,30 @@ public class NGO {
     
     @Column(name = "pancard")
     private Boolean pancard;
+
+	@Column(name = "pancard_file")
+	private String pancardFile;
     
     @Column(name = "certificate_validity")
     private Boolean certificateValidity;
+
+	@Column(name= "certificate_validity_file")
+	private String certificateValidityFile;
     
     @Column(name = "exemption_details")
     private String exemptionDetails;
     
     @Column(name = "audited_statements")
     private Boolean auditedStatements;
+
+	@Column(name= "audited_statements_file")
+	private String auditedStatementsFile;
     
     @Column(name = "mou")
     private Boolean mou;
+
+	@Column(name= "mou_file")
+	private String mouFile;
     
     @Column(name = "org_budget")
     private Double orgBudget;
@@ -170,8 +181,9 @@ public class NGO {
     
     @Column(name = "volunteer_opportunities")
     private Boolean volunteerOpportunities;
-    
-    @Column(name = "funding_sources")
+
+
+	@Column(name = "funding_sources")
     private String fundingSources;
     
     @Column(name = "individual_donors")
@@ -197,6 +209,12 @@ public class NGO {
     
     @Column(name = "other_agencies_details")
     private String otherAgenciesDetails;
+
+	@Column(name = "other_sources")
+	private Boolean otherSources;
+
+	@Column(name = "other_sources_details")
+	private String otherSourcesDetails;
     
     @Column(name = "main_objective", columnDefinition = "TEXT")
     private String mainObjective;
@@ -215,6 +233,9 @@ public class NGO {
     
     @Column(name = "areas_of_intervention")
     private String areasOfIntervention;
+
+	@Column (name ="mon_within_schedule_vii")
+	private Boolean monWithinScheduleVII;
     
     @Column(name = "monitoring_methods")
     private Boolean monitoringMethods;
@@ -323,6 +344,10 @@ public class NGO {
 		this.pancard = pancard;
 	}
 
+	public String getPancardFile() {return pancardFile; }
+
+	public void setPancardFile(String pancardFile) {this.pancardFile = pancardFile;}
+
 	public Boolean getCertificateValidity() {
 		return certificateValidity;
 	}
@@ -330,6 +355,11 @@ public class NGO {
 	public void setCertificateValidity(Boolean certificateValidity) {
 		this.certificateValidity = certificateValidity;
 	}
+
+	public String getCertificateValidityFile() {return certificateValidityFile;}
+
+	public void setCertificateValidityFile(String certificateValidityFile) {this.certificateValidityFile = certificateValidityFile;}
+
 
 	public String getExemptionDetails() {
 		return exemptionDetails;
@@ -347,6 +377,10 @@ public class NGO {
 		this.auditedStatements = auditedStatements;
 	}
 
+	public String getAuditedStatementsFile() {return auditedStatementsFile;}
+
+	public void setAuditedStatementsFile(String auditedStatementsFile) {this.auditedStatementsFile = auditedStatementsFile;}
+
 	public Boolean getMou() {
 		return mou;
 	}
@@ -354,6 +388,10 @@ public class NGO {
 	public void setMou(Boolean mou) {
 		this.mou = mou;
 	}
+
+	public String getMouFile() {return mouFile;}
+
+	public void setMouFile(String mouFile) {this.mouFile = mouFile;}
 
 	public Double getOrgBudget() {
 		return orgBudget;
@@ -410,6 +448,14 @@ public class NGO {
 	public void setAgendaDetails(String agendaDetails) {
 		this.agendaDetails = agendaDetails;
 	}
+
+	public Boolean getOtherSources() {return otherSources;}
+
+	public void setOtherSources(Boolean otherSources) {this.otherSources = otherSources;}
+
+	public String getOtherSourcesDetails() {return otherSourcesDetails;}
+
+	public void setOtherSourcesDetails(String otherSourcesDetails) {this.otherSourcesDetails = otherSourcesDetails;}
 
 	public Boolean getBeneficiaryCaste() {
 		return beneficiaryCaste;
@@ -683,6 +729,10 @@ public class NGO {
 		this.areasOfIntervention = areasOfIntervention;
 	}
 
+	public Boolean getMonWithinScheduleVII() {return monWithinScheduleVII; }
+
+	public void setMonWithinScheduleVII(Boolean monWithinScheduleVII) {this.monWithinScheduleVII = monWithinScheduleVII;}
+
 	public Boolean getMonitoringMethods() {
 		return monitoringMethods;
 	}
@@ -723,6 +773,7 @@ public class NGO {
 		this.networkMembership = networkMembership;
 	}
 
+
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
@@ -739,22 +790,20 @@ public class NGO {
 		this.updatedAt = updatedAt;
 	}
 
-	public NGO(Long id, String ngoName, String location, String founder, String registrationDetails,
-			LocalDate registrationDate, Boolean statutoryDocs, String statutoryDocsFile, Boolean pancard,
-			Boolean certificateValidity, String exemptionDetails, Boolean auditedStatements, Boolean mou,
-			Double orgBudget, Double totalExpenses, String incomeVsExpenditure, Double directProgrammeSpend,
-			String fixedAssets, Boolean religiousAgenda, String agendaDetails, Boolean beneficiaryCaste,
-			Boolean politicalNature, Boolean socialAdvocacy, Boolean govtConflict, Boolean humanRights,
-			Boolean environmental, Boolean governingBody, Boolean governingDetails, Boolean relatedMembers,
-			String relationsSpecify, String meetingFrequency, Integer fullTimeEmployees, Integer partTimeEmployees,
-			Integer skilledStaff, Boolean trainedPersonnel, Boolean definedRoles, Double avgStaffExperience,
-			String staffTraining, Boolean volunteerOpportunities, String fundingSources, Boolean individualDonors,
-			String individualDonorsDetails, Boolean corporateFunders, String corporateFunderDetails,
-			Boolean govtFunders, String govtFundersDetails, Boolean otherAgencies, String otherAgenciesDetails,
-			String mainObjective, String targetedBeneficiaries, Double percentLowSEB, Integer totalOutReach,
-			Double costPerBeneficiary, String areasOfIntervention, Boolean monitoringMethods,
-			Boolean monitoringResponsibility, Boolean externalEvaluation, Boolean accreditation,
-			Boolean networkMembership, LocalDateTime createdAt, LocalDateTime updatedAt) {
+	public NGO(Long id, String ngoName, String location, String founder, String registrationDetails, LocalDate registrationDate,
+			   Boolean statutoryDocs, String statutoryDocsFile, Boolean pancard, String pancardFile, Boolean certificateValidity,
+			   String certificateValidityFile, String exemptionDetails, Boolean auditedStatements, String auditedStatementsFile,
+			   Boolean mou, String mouFile, Double orgBudget, Double totalExpenses, String incomeVsExpenditure, Double directProgrammeSpend,
+			   String fixedAssets, Boolean religiousAgenda, String agendaDetails, Boolean beneficiaryCaste, Boolean politicalNature,
+			   Boolean socialAdvocacy, Boolean govtConflict, Boolean humanRights, Boolean environmental, Boolean governingDetails,
+			   Boolean governingBody, Boolean relatedMembers, String relationsSpecify, String meetingFrequency, Integer fullTimeEmployees,
+			   Integer partTimeEmployees, Integer skilledStaff, Boolean trainedPersonnel, Boolean definedRoles, Double avgStaffExperience,
+			   String staffTraining, Boolean volunteerOpportunities, String fundingSources, Boolean individualDonors, String individualDonorsDetails,
+			   Boolean corporateFunders, String corporateFunderDetails, Boolean govtFunders, String govtFundersDetails, Boolean otherAgencies,
+			   String otherAgenciesDetails, Boolean otherSources, String otherSourcesDetails, String mainObjective, String targetedBeneficiaries,
+			   Double percentLowSEB, Integer totalOutReach, Double costPerBeneficiary, String areasOfIntervention, Boolean monWithinScheduleVII,
+			   Boolean monitoringMethods, Boolean monitoringResponsibility, Boolean externalEvaluation, Boolean accreditation,
+			   Boolean networkMembership, LocalDateTime createdAt, LocalDateTime updatedAt) {
 		super();
 		this.id = id;
 		this.ngoName = ngoName;
@@ -765,10 +814,14 @@ public class NGO {
 		this.statutoryDocs = statutoryDocs;
 		this.statutoryDocsFile = statutoryDocsFile;
 		this.pancard = pancard;
+		this.pancardFile = pancardFile;
 		this.certificateValidity = certificateValidity;
+		this.certificateValidityFile = certificateValidityFile;
 		this.exemptionDetails = exemptionDetails;
 		this.auditedStatements = auditedStatements;
+		this.auditedStatementsFile = auditedStatementsFile;
 		this.mou = mou;
+		this.mouFile = mouFile;
 		this.orgBudget = orgBudget;
 		this.totalExpenses = totalExpenses;
 		this.incomeVsExpenditure = incomeVsExpenditure;
@@ -782,8 +835,8 @@ public class NGO {
 		this.govtConflict = govtConflict;
 		this.humanRights = humanRights;
 		this.environmental = environmental;
-		this.governingBody = governingBody;
 		this.governingDetails = governingDetails;
+		this.governingBody = governingBody;
 		this.relatedMembers = relatedMembers;
 		this.relationsSpecify = relationsSpecify;
 		this.meetingFrequency = meetingFrequency;
@@ -804,12 +857,15 @@ public class NGO {
 		this.govtFundersDetails = govtFundersDetails;
 		this.otherAgencies = otherAgencies;
 		this.otherAgenciesDetails = otherAgenciesDetails;
+		this.otherSources = otherSources;
+		this.otherSourcesDetails = otherSourcesDetails;
 		this.mainObjective = mainObjective;
 		this.targetedBeneficiaries = targetedBeneficiaries;
 		this.percentLowSEB = percentLowSEB;
 		this.totalOutReach = totalOutReach;
 		this.costPerBeneficiary = costPerBeneficiary;
 		this.areasOfIntervention = areasOfIntervention;
+		this.monWithinScheduleVII = monWithinScheduleVII;
 		this.monitoringMethods = monitoringMethods;
 		this.monitoringResponsibility = monitoringResponsibility;
 		this.externalEvaluation = externalEvaluation;
@@ -821,34 +877,80 @@ public class NGO {
 
 	@Override
 	public String toString() {
-		return "NGO [id=" + id + ", ngoName=" + ngoName + ", location=" + location + ", founder=" + founder
-				+ ", registrationDetails=" + registrationDetails + ", registrationDate=" + registrationDate
-				+ ", statutoryDocs=" + statutoryDocs + ", statutoryDocsFile=" + statutoryDocsFile + ", pancard="
-				+ pancard + ", certificateValidity=" + certificateValidity + ", exemptionDetails=" + exemptionDetails
-				+ ", auditedStatements=" + auditedStatements + ", mou=" + mou + ", orgBudget=" + orgBudget
-				+ ", totalExpenses=" + totalExpenses + ", incomeVsExpenditure=" + incomeVsExpenditure
-				+ ", directProgrammeSpend=" + directProgrammeSpend + ", fixedAssets=" + fixedAssets
-				+ ", religiousAgenda=" + religiousAgenda + ", agendaDetails=" + agendaDetails + ", beneficiaryCaste="
-				+ beneficiaryCaste + ", politicalNature=" + politicalNature + ", socialAdvocacy=" + socialAdvocacy
-				+ ", govtConflict=" + govtConflict + ", humanRights=" + humanRights + ", environmental=" + environmental
-				+ ", governingBody=" + governingBody + ", governingDetails=" + governingDetails + ", relatedMembers="
-				+ relatedMembers + ", relationsSpecify=" + relationsSpecify + ", meetingFrequency=" + meetingFrequency
-				+ ", fullTimeEmployees=" + fullTimeEmployees + ", partTimeEmployees=" + partTimeEmployees
-				+ ", skilledStaff=" + skilledStaff + ", trainedPersonnel=" + trainedPersonnel + ", definedRoles="
-				+ definedRoles + ", avgStaffExperience=" + avgStaffExperience + ", staffTraining=" + staffTraining
-				+ ", volunteerOpportunities=" + volunteerOpportunities + ", fundingSources=" + fundingSources
-				+ ", individualDonors=" + individualDonors + ", individualDonorsDetails=" + individualDonorsDetails
-				+ ", corporateFunders=" + corporateFunders + ", corporateFunderDetails=" + corporateFunderDetails
-				+ ", govtFunders=" + govtFunders + ", govtFundersDetails=" + govtFundersDetails + ", otherAgencies="
-				+ otherAgencies + ", otherAgenciesDetails=" + otherAgenciesDetails + ", mainObjective=" + mainObjective
-				+ ", targetedBeneficiaries=" + targetedBeneficiaries + ", percentLowSEB=" + percentLowSEB
-				+ ", totalOutReach=" + totalOutReach + ", costPerBeneficiary=" + costPerBeneficiary
-				+ ", areasOfIntervention=" + areasOfIntervention + ", monitoringMethods=" + monitoringMethods
-				+ ", monitoringResponsibility=" + monitoringResponsibility + ", externalEvaluation="
-				+ externalEvaluation + ", accreditation=" + accreditation + ", networkMembership=" + networkMembership
-				+ ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + "]";
+		return "NGO{" +
+				"id=" + id +
+				", ngoName='" + ngoName + '\'' +
+				", projects=" + projects +
+				", ngoUsers=" + ngoUsers +
+				", location='" + location + '\'' +
+				", founder='" + founder + '\'' +
+				", registrationDetails='" + registrationDetails + '\'' +
+				", registrationDate=" + registrationDate +
+				", statutoryDocs=" + statutoryDocs +
+				", statutoryDocsFile='" + statutoryDocsFile + '\'' +
+				", pancard=" + pancard +
+				", pancardFile='" + pancardFile + '\'' +
+				", certificateValidity=" + certificateValidity +
+				", certificateValidityFile='" + certificateValidityFile + '\'' +
+				", exemptionDetails='" + exemptionDetails + '\'' +
+				", auditedStatements=" + auditedStatements +
+				", auditedStatementsFile='" + auditedStatementsFile + '\'' +
+				", mou=" + mou +
+				", mouFile='" + mouFile + '\'' +
+				", orgBudget=" + orgBudget +
+				", totalExpenses=" + totalExpenses +
+				", incomeVsExpenditure='" + incomeVsExpenditure + '\'' +
+				", directProgrammeSpend=" + directProgrammeSpend +
+				", fixedAssets='" + fixedAssets + '\'' +
+				", religiousAgenda=" + religiousAgenda +
+				", agendaDetails='" + agendaDetails + '\'' +
+				", beneficiaryCaste=" + beneficiaryCaste +
+				", politicalNature=" + politicalNature +
+				", socialAdvocacy=" + socialAdvocacy +
+				", govtConflict=" + govtConflict +
+				", humanRights=" + humanRights +
+				", environmental=" + environmental +
+				", governingBody=" + governingBody +
+				", governingDetails=" + governingDetails +
+				", relatedMembers=" + relatedMembers +
+				", relationsSpecify='" + relationsSpecify + '\'' +
+				", meetingFrequency='" + meetingFrequency + '\'' +
+				", fullTimeEmployees=" + fullTimeEmployees +
+				", partTimeEmployees=" + partTimeEmployees +
+				", skilledStaff=" + skilledStaff +
+				", trainedPersonnel=" + trainedPersonnel +
+				", definedRoles=" + definedRoles +
+				", avgStaffExperience=" + avgStaffExperience +
+				", staffTraining='" + staffTraining + '\'' +
+				", volunteerOpportunities=" + volunteerOpportunities +
+				", fundingSources='" + fundingSources + '\'' +
+				", individualDonors=" + individualDonors +
+				", individualDonorsDetails='" + individualDonorsDetails + '\'' +
+				", corporateFunders=" + corporateFunders +
+				", corporateFunderDetails='" + corporateFunderDetails + '\'' +
+				", govtFunders=" + govtFunders +
+				", govtFundersDetails='" + govtFundersDetails + '\'' +
+				", otherAgencies=" + otherAgencies +
+				", otherAgenciesDetails='" + otherAgenciesDetails + '\'' +
+				", otherSources=" + otherSources +
+				", otherSourcesDetails='" + otherSourcesDetails + '\'' +
+				", mainObjective='" + mainObjective + '\'' +
+				", targetedBeneficiaries='" + targetedBeneficiaries + '\'' +
+				", percentLowSEB=" + percentLowSEB +
+				", totalOutReach=" + totalOutReach +
+				", costPerBeneficiary=" + costPerBeneficiary +
+				", areasOfIntervention='" + areasOfIntervention + '\'' +
+				", monWithinScheduleVII=" + monWithinScheduleVII +
+				", monitoringMethods=" + monitoringMethods +
+				", monitoringResponsibility=" + monitoringResponsibility +
+				", externalEvaluation=" + externalEvaluation +
+				", accreditation=" + accreditation +
+				", networkMembership=" + networkMembership +
+				", createdAt=" + createdAt +
+				", updatedAt=" + updatedAt +
+				'}';
 	}
-    
-	
-    // Note: Getters, setters, toString, and constructors will be added by user as mentioned
+
+
+	// Note: Getters, setters, toString, and constructors will be added by user as mentioned
 }

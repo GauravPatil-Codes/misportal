@@ -2,6 +2,7 @@ package com.cmsfoundation.misportal.repositories;
 
 import com.cmsfoundation.misportal.entities.MonthlyTarget;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -37,4 +38,12 @@ public interface MonthlyTargetRepository extends JpaRepository<MonthlyTarget, Lo
     @Query("SELECT SUM(mt.plannedTarget), SUM(mt.achievedTarget) FROM MonthlyTarget mt " +
            "WHERE mt.project.id = :projectId")
     Object[] getProjectAchievementSummary(@Param("projectId") Long projectId);
+    
+ // In MonthlyTargetRepository
+    @Modifying
+    @Query("DELETE FROM MonthlyTarget m WHERE m.project.id = :projectId")
+    void deleteByProjectId(@Param("projectId") Long projectId);
+
+  
+
 }

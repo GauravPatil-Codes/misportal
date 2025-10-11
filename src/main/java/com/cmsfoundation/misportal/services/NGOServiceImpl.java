@@ -62,10 +62,14 @@ public class NGOServiceImpl implements NGOService {
         if (ngo.getStatutoryDocs() != null) existing.setStatutoryDocs(ngo.getStatutoryDocs());
         if (ngo.getStatutoryDocsFile() != null) existing.setStatutoryDocsFile(ngo.getStatutoryDocsFile());
         if (ngo.getPancard() != null) existing.setPancard(ngo.getPancard());
+        if (ngo.getPancardFile() != null) existing.setPancardFile(ngo.getPancardFile());
         if (ngo.getCertificateValidity() != null) existing.setCertificateValidity(ngo.getCertificateValidity());
+        if (ngo.getCertificateValidityFile() != null) existing.setCertificateValidityFile(ngo.getCertificateValidityFile());
         if (ngo.getExemptionDetails() != null) existing.setExemptionDetails(ngo.getExemptionDetails());
         if (ngo.getAuditedStatements() != null) existing.setAuditedStatements(ngo.getAuditedStatements());
+        if (ngo.getAuditedStatementsFile() != null) existing.setAuditedStatementsFile(ngo.getAuditedStatementsFile());
         if (ngo.getMou() != null) existing.setMou(ngo.getMou());
+        if (ngo.getMouFile() != null) existing.setMouFile(ngo.getMouFile());
         if (ngo.getOrgBudget() != null) existing.setOrgBudget(ngo.getOrgBudget());
         if (ngo.getTotalExpenses() != null) existing.setTotalExpenses(ngo.getTotalExpenses());
         if (ngo.getIncomeVsExpenditure() != null) existing.setIncomeVsExpenditure(ngo.getIncomeVsExpenditure());
@@ -79,8 +83,8 @@ public class NGOServiceImpl implements NGOService {
         if (ngo.getGovtConflict() != null) existing.setGovtConflict(ngo.getGovtConflict());
         if (ngo.getHumanRights() != null) existing.setHumanRights(ngo.getHumanRights());
         if (ngo.getEnvironmental() != null) existing.setEnvironmental(ngo.getEnvironmental());
-        if (ngo.getGoverningBody() != null) existing.setGoverningBody(ngo.getGoverningBody());
         if (ngo.getGoverningDetails() != null) existing.setGoverningDetails(ngo.getGoverningDetails());
+        if (ngo.getGoverningBody() != null) existing.setGoverningBody(ngo.getGoverningBody());
         if (ngo.getRelatedMembers() != null) existing.setRelatedMembers(ngo.getRelatedMembers());
         if (ngo.getRelationsSpecify() != null) existing.setRelationsSpecify(ngo.getRelationsSpecify());
         if (ngo.getMeetingFrequency() != null) existing.setMeetingFrequency(ngo.getMeetingFrequency());
@@ -101,12 +105,15 @@ public class NGOServiceImpl implements NGOService {
         if (ngo.getGovtFundersDetails() != null) existing.setGovtFundersDetails(ngo.getGovtFundersDetails());
         if (ngo.getOtherAgencies() != null) existing.setOtherAgencies(ngo.getOtherAgencies());
         if (ngo.getOtherAgenciesDetails() != null) existing.setOtherAgenciesDetails(ngo.getOtherAgenciesDetails());
+        if (ngo.getOtherSources() != null) existing.setOtherSources(ngo.getOtherSources());
+        if (ngo.getOtherSourcesDetails() != null) existing.setOtherSourcesDetails(ngo.getOtherSourcesDetails());
         if (ngo.getMainObjective() != null) existing.setMainObjective(ngo.getMainObjective());
         if (ngo.getTargetedBeneficiaries() != null) existing.setTargetedBeneficiaries(ngo.getTargetedBeneficiaries());
         if (ngo.getPercentLowSEB() != null) existing.setPercentLowSEB(ngo.getPercentLowSEB());
         if (ngo.getTotalOutReach() != null) existing.setTotalOutReach(ngo.getTotalOutReach());
         if (ngo.getCostPerBeneficiary() != null) existing.setCostPerBeneficiary(ngo.getCostPerBeneficiary());
         if (ngo.getAreasOfIntervention() != null) existing.setAreasOfIntervention(ngo.getAreasOfIntervention());
+        if (ngo.getMonWithinScheduleVII() != null) existing.setMonWithinScheduleVII(ngo.getMonWithinScheduleVII());
         if (ngo.getMonitoringMethods() != null) existing.setMonitoringMethods(ngo.getMonitoringMethods());
         if (ngo.getMonitoringResponsibility() != null) existing.setMonitoringResponsibility(ngo.getMonitoringResponsibility());
         if (ngo.getExternalEvaluation() != null) existing.setExternalEvaluation(ngo.getExternalEvaluation());
@@ -117,6 +124,7 @@ public class NGOServiceImpl implements NGOService {
 
         return ngoRepository.save(existing);
     }
+
 
 
     @Override

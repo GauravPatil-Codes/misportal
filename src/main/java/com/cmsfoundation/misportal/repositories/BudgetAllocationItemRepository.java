@@ -3,6 +3,7 @@ package com.cmsfoundation.misportal.repositories;
 import com.cmsfoundation.misportal.entities.BudgetAllocationItem;
 import com.cmsfoundation.misportal.entities.BudgetHead;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,4 +30,11 @@ public interface BudgetAllocationItemRepository extends JpaRepository<BudgetAllo
     // Get budget summary by budget head for a project
     @Query("SELECT b.budgetType, SUM(b.total) FROM BudgetAllocationItem b WHERE b.project.id = :projectId GROUP BY b.budgetType")
     List<Object[]> getBudgetSummaryByProject(@Param("projectId") Long projectId);
+
+
+ // In BudgetAllocationItemRepository  
+    @Modifying
+    @Query("DELETE FROM BudgetAllocationItem b WHERE b.project.id = :projectId")
+    void deleteByProjectId(@Param("projectId") Long projectId);
 }
+
