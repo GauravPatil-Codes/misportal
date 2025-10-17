@@ -321,137 +321,92 @@ public class ProjectServiceImpl implements ProjectService {
 	    System.out.println("=== UPDATE MONTHLY TARGETS FOR BUDGET ITEM ===");
 	    System.out.println("Budget Item ID: " + budgetItem.getId());
 	    System.out.println("Budget Item Sr No: " + budgetItem.getSrNo());
-	    System.out.println("Target DTOs received: " + (targetDTOs != null ? targetDTOs.size() : 0));
-	    
-	    if (targetDTOs != null) {
-	        for (MonthlyTargetItemDTO dto : targetDTOs) {
-	            System.out.println("Target DTO: Month=" + dto.getTargetMonth() + ", Planned=" + dto.getPlannedTarget() + ", Description=" + dto.getTargetDescription());
-	        }
-	    }
-	    
-	    // CRITICAL: Get existing targets DIRECTLY from database, not from entity collection
-	    List<MonthlyTarget> existingTargets = monthlyTargetRepository.findByBudgetAllocationItemId(budgetItem.getId());
-	    if (existingTargets == null) {
-	        existingTargets = new ArrayList<>();
-	    }
-	    System.out.println("Existing targets from DB: " + existingTargets.size());
 
-	    // Create map of provided targets by month
+	    List<MonthlyTarget> existingTargets = monthlyTargetRepository.findByBudgetAllocationItemId(budgetItem.getId());
+	    if (existingTargets == null) existingTargets = new ArrayList<>();
+
+	    LocalDate startDate = project.getProjectStartDate();
+	    LocalDate endDate = project.getProjectEndDate();
+
+	    if (startDate == null || endDate == null) {
+	        System.out.println("Project dates are null, skipping monthly target updates");
+	        return;
+	    }
+
+	    // 1️⃣ DELETE outdated first
+	    List<MonthlyTarget> targetsToDelete = existingTargets.stream()
+	            .filter(target -> target.getTargetMonth().isBefore(startDate)
+	                    || target.getTargetMonth().isAfter(endDate))
+	            .collect(Collectors.toList());
+
+	    if (!targetsToDelete.isEmpty()) {
+	        System.out.println("Deleting " + targetsToDelete.size() + " outdated targets");
+	        monthlyTargetRepository.deleteAll(targetsToDelete);
+	        
+	        // ✅ CRITICAL FIX: Remove deleted targets from the in-memory list
+	        existingTargets.removeAll(targetsToDelete);
+	        System.out.println("Remaining existing targets: " + existingTargets.size());
+	    }
+
+
+	    // 2️⃣ Prepare DTO map and existing target map
 	    Map<LocalDate, MonthlyTargetItemDTO> providedTargets = new HashMap<>();
 	    if (targetDTOs != null) {
 	        for (MonthlyTargetItemDTO dto : targetDTOs) {
 	            providedTargets.put(dto.getTargetMonth(), dto);
 	        }
 	    }
+	    Map<LocalDate, MonthlyTarget> existingTargetMap = existingTargets.stream()
+	            .collect(Collectors.toMap(MonthlyTarget::getTargetMonth, Function.identity(), (a, b) -> a));
 
-	    // Generate all months between project start and end date
-	    LocalDate startDate = project.getProjectStartDate();
-	    LocalDate endDate = project.getProjectEndDate();
-	    if (startDate == null || endDate == null) {
-	        System.out.println("Project dates are null, skipping monthly target updates");
-	        return;
-	    }
+	    List<MonthlyTarget> targetsToSave = new ArrayList<>();
 
 	    YearMonth start = YearMonth.from(startDate);
 	    YearMonth end = YearMonth.from(endDate);
 
-	    // Create map of existing targets by month for quick lookup
-	    Map<LocalDate, MonthlyTarget> existingTargetMap = existingTargets.stream()
-	            .collect(Collectors.toMap(MonthlyTarget::getTargetMonth, Function.identity()));
-
-	    // UPDATE existing targets and CREATE missing ones
-	    List<MonthlyTarget> targetsToSave = new ArrayList<>();
-	    
 	    for (YearMonth month = start; !month.isAfter(end); month = month.plusMonths(1)) {
 	        LocalDate targetMonth = month.atDay(1);
-	        MonthlyTargetItemDTO providedTarget = providedTargets.get(targetMonth);
-	        MonthlyTarget existingTarget = existingTargetMap.get(targetMonth);
+	        MonthlyTargetItemDTO provided = providedTargets.get(targetMonth);
+	        MonthlyTarget entity = existingTargetMap.get(targetMonth);
 
-	        if (existingTarget != null) {
-	            // UPDATE existing monthly target
-	            if (providedTarget != null) {
-	                existingTarget.setPlannedTarget(providedTarget.getPlannedTarget());
-	                existingTarget.setTargetDescription(providedTarget.getTargetDescription());
-	                
-	                // 🚨 ADD ALL THESE MISSING UPDATES:
-	                existingTarget.setAchievedTarget(providedTarget.getAchievedTarget());
-	                existingTarget.setDeviation(providedTarget.getDeviation());
-	                existingTarget.setAchievementPercentage(providedTarget.getAchievementPercentage());
-	                existingTarget.setDeviationReason(providedTarget.getDeviationReason());
-	                existingTarget.setMitigationPlan(providedTarget.getMitigationPlan());
-	            } else {
-	                // Set default values
-	                existingTarget.setPlannedTarget(0);
-	                existingTarget.setTargetDescription("No specific target set...");
-	                
-	                // 🚨 ADD DEFAULT VALUES FOR MISSING FIELDS:
-	                existingTarget.setAchievedTarget(0);
-	                existingTarget.setDeviation(0);
-	                existingTarget.setAchievementPercentage(0.0);
-	                existingTarget.setDeviationReason(null);
-	                existingTarget.setMitigationPlan(null);
-	            }
-	            targetsToSave.add(existingTarget);
+	        if (entity == null) {
+	            entity = new MonthlyTarget();
+	            entity.setBudgetAllocationItem(budgetItem);
+	            entity.setProject(project);
+	            entity.setTargetMonth(targetMonth);
+	        }
+
+	        if (provided != null) {
+	            entity.setPlannedTarget(provided.getPlannedTarget());
+	            entity.setTargetDescription(provided.getTargetDescription());
+	            entity.setAchievedTarget(provided.getAchievedTarget());
+	            entity.setDeviation(provided.getDeviation());
+	            entity.setAchievementPercentage(provided.getAchievementPercentage());
+	            entity.setDeviationReason(provided.getDeviationReason());
+	            entity.setMitigationPlan(provided.getMitigationPlan());
 	        } else {
-	            // CREATE new monthly target
-	            MonthlyTarget newTarget = new MonthlyTarget();
-	            newTarget.setTargetMonth(targetMonth);
-	            newTarget.setBudgetAllocationItem(budgetItem);
-	            newTarget.setProject(project);
-	            
-	            if (providedTarget != null) {
-	                newTarget.setPlannedTarget(providedTarget.getPlannedTarget());
-	                newTarget.setTargetDescription(providedTarget.getTargetDescription());
-	                
-	                // 🚨 ADD ALL MISSING FIELD ASSIGNMENTS:
-	                newTarget.setAchievedTarget(providedTarget.getAchievedTarget());
-	                newTarget.setDeviation(providedTarget.getDeviation());
-	                newTarget.setAchievementPercentage(providedTarget.getAchievementPercentage());
-	                newTarget.setDeviationReason(providedTarget.getDeviationReason());
-	                newTarget.setMitigationPlan(providedTarget.getMitigationPlan());
-	            } else {
-	                // Set defaults for new target
-	                newTarget.setPlannedTarget(0);
-	                newTarget.setTargetDescription("No specific target set...");
-	                newTarget.setAchievedTarget(0);
-	                newTarget.setDeviation(0);
-	                newTarget.setAchievementPercentage(0.0);
-	                newTarget.setDeviationReason(null);
-	                newTarget.setMitigationPlan(null);
-	            }
-	            targetsToSave.add(newTarget);
+	            entity.setPlannedTarget(0);
+	            entity.setAchievedTarget(0);
+	            entity.setDeviation(0);
+	            entity.setAchievementPercentage(0.0);
+	            entity.setTargetDescription("No specific target set for " + month.getMonth());
+	            entity.setDeviationReason(null);
+	            entity.setMitigationPlan(null);
 	        }
+
+	        targetsToSave.add(entity);
 	    }
 
-	    // CRITICAL FIX: Save all updated/new targets to database
+	    // 3️⃣ Save all new or updated targets
 	    if (!targetsToSave.isEmpty()) {
-	        System.out.println("Saving " + targetsToSave.size() + " targets to database");
-	        List<MonthlyTarget> savedTargets = monthlyTargetRepository.saveAll(targetsToSave);
-	        System.out.println("Successfully saved " + savedTargets.size() + " targets");
-	        
-	        // VERIFY what was actually saved
-	        for (MonthlyTarget saved : savedTargets) {
-	            System.out.println("Saved target: ID=" + saved.getId() + ", Month=" + saved.getTargetMonth() + ", Planned=" + saved.getPlannedTarget());
-	        }
-	        
-	        // Update the budgetItem's monthly targets collection with SAVED entities
-	        budgetItem.setMonthlyTargets(savedTargets);
-	        System.out.println("Updated budget item collection with " + savedTargets.size() + " targets");
+	        List<MonthlyTarget> saved = monthlyTargetRepository.saveAll(targetsToSave);
+	        System.out.println("Saved " + saved.size() + " monthly targets");
+	        budgetItem.setMonthlyTargets(saved); // Only link saved records
 	    }
 
-	    // DELETE targets that are outside the new project timeline
-	    List<MonthlyTarget> targetsToDelete = existingTargets.stream()
-	            .filter(target -> target.getTargetMonth().isBefore(startDate) || 
-	                            target.getTargetMonth().isAfter(endDate))
-	            .collect(Collectors.toList());
-	    
-	    if (!targetsToDelete.isEmpty()) {
-	        monthlyTargetRepository.deleteAll(targetsToDelete);
-	        System.out.println("DELETED " + targetsToDelete.size() + " outdated monthly targets");
-	    }
-	    
 	    System.out.println("=== END UPDATE MONTHLY TARGETS ===");
 	}
+
 	
 
 	
