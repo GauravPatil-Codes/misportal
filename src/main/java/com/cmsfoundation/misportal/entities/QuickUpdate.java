@@ -3,6 +3,8 @@ package com.cmsfoundation.misportal.entities;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 @Table(name = "quick_updates")
 public class QuickUpdate {
@@ -200,59 +202,63 @@ public class QuickUpdate {
 
 @Embeddable
 class MediaFiles {
+    
+    @JsonProperty("imageUrl")  // ← Map JSON "imageUrl" to this field
     @Column(name = "media_file_1")
     private String mediaFile1;
     
+    @JsonProperty("videoUrl")  // ← Map JSON "videoUrl" to this field
     @Column(name = "media_file_2")
     private String mediaFile2;
     
+    @JsonProperty("documentUrl")  // ← Map JSON "documentUrl" to this field
     @Column(name = "media_file_3")
     private String mediaFile3;
     
     
+    
+    public MediaFiles(String mediaFile1, String mediaFile2, String mediaFile3) {
+        this.mediaFile1 = mediaFile1;
+        this.mediaFile2 = mediaFile2;
+        this.mediaFile3 = mediaFile3;
+    }
+    
+    @JsonProperty("imageUrl")  // ← Also add to getters
     public String getMediaFile1() {
-		return mediaFile1;
-	}
+        return mediaFile1;
+    }
 
+    @JsonProperty("imageUrl")  // ← And setters
+    public void setMediaFile1(String mediaFile1) {
+        this.mediaFile1 = mediaFile1;
+    }
 
-	public void setMediaFile1(String mediaFile1) {
-		this.mediaFile1 = mediaFile1;
-	}
+    @JsonProperty("videoUrl")
+    public String getMediaFile2() {
+        return mediaFile2;
+    }
 
+    @JsonProperty("videoUrl")
+    public void setMediaFile2(String mediaFile2) {
+        this.mediaFile2 = mediaFile2;
+    }
 
-	public String getMediaFile2() {
-		return mediaFile2;
-	}
+    @JsonProperty("documentUrl")
+    public String getMediaFile3() {
+        return mediaFile3;
+    }
 
+    @JsonProperty("documentUrl")
+    public void setMediaFile3(String mediaFile3) {
+        this.mediaFile3 = mediaFile3;
+    }
 
-	public void setMediaFile2(String mediaFile2) {
-		this.mediaFile2 = mediaFile2;
-	}
+    @Override
+    public String toString() {
+        return "MediaFiles [mediaFile1=" + mediaFile1 + ", mediaFile2=" + mediaFile2 
+                + ", mediaFile3=" + mediaFile3 + "]";
+    }
 
-
-	public String getMediaFile3() {
-		return mediaFile3;
-	}
-
-
-	public void setMediaFile3(String mediaFile3) {
-		this.mediaFile3 = mediaFile3;
-	}
-
-
-	@Override
-	public String toString() {
-		return "MediaFiles [mediaFile1=" + mediaFile1 + ", mediaFile2=" + mediaFile2 + ", mediaFile3=" + mediaFile3
-				+ "]";
-	}
-
-
-	public MediaFiles(String mediaFile1, String mediaFile2, String mediaFile3) {
-		super();
-		this.mediaFile1 = mediaFile1;
-		this.mediaFile2 = mediaFile2;
-		this.mediaFile3 = mediaFile3;
-	}
 
 
 	// Default constructor
