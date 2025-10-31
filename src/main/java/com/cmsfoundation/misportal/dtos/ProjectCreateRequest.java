@@ -37,6 +37,18 @@ public class ProjectCreateRequest {
     private List<BudgetAllocationItemDTO> budgetAllocationItems;
     private List<MonthlyTargetItemDTO> monthlyTargetItems;
     
+    // ✅ NEW: Subprojects support
+    private List<SubProjectDTO> subProjects;
+    private Long parentProjectId;  // For subproject creation
+    
+    // ... existing getters/setters
+    
+    public List<SubProjectDTO> getSubProjects() { return subProjects; }
+    public void setSubProjects(List<SubProjectDTO> subProjects) { this.subProjects = subProjects; }
+    
+    public Long getParentProjectId() { return parentProjectId; }
+    public void setParentProjectId(Long parentProjectId) { this.parentProjectId = parentProjectId; }
+    
     // Constructors, getters, and setters
     public ProjectCreateRequest() {}
     

@@ -50,6 +50,10 @@ public class BudgetAllocationItem {
     @Column(name = "beneficiary_contribution")
     private Double beneficiaryContribution;
     
+   
+
+
+    
     // Each item is categorized under one of the 8 budget heads
     @Column(name = "budget_type")
     @Enumerated(EnumType.STRING)
@@ -116,17 +120,69 @@ public class BudgetAllocationItem {
     public List<MonthlyTarget> getMonthlyTargets() { return monthlyTargets; }
     public void setMonthlyTargets(List<MonthlyTarget> monthlyTargets) { this.monthlyTargets = monthlyTargets; }
 
-    @Override
-    public String toString() {
-        return "BudgetAllocationItem{" +
-                "id=" + id +
-                ", srNo='" + srNo + '\'' +
-                ", itemName='" + itemName + '\'' +
-                ", description='" + description + '\'' +
-                ", units=" + units +
-                ", unitCost=" + unitCost +
-                ", total=" + total +
-                ", budgetType=" + budgetType +
-                '}';
-    }
+    
+	public BudgetAllocationItem(Long id, Project project, String srNo, String itemName, String description,
+			Integer units, Double unitCost, Double total, Double cmsContribution, Double ngoContribution,
+			Double governmentContribution, Double beneficiaryContribution, Project subProject, BudgetHead budgetType,
+			List<MonthlyTarget> monthlyTargets) {
+		super();
+		this.id = id;
+		this.project = project;
+		this.srNo = srNo;
+		this.itemName = itemName;
+		this.description = description;
+		this.units = units;
+		this.unitCost = unitCost;
+		this.total = total;
+		this.cmsContribution = cmsContribution;
+		this.ngoContribution = ngoContribution;
+		this.governmentContribution = governmentContribution;
+		this.beneficiaryContribution = beneficiaryContribution;
+		this.subProject = subProject;
+		this.budgetType = budgetType;
+		this.monthlyTargets = monthlyTargets;
+	}
+
+	@Override
+	public String toString() {
+		return "BudgetAllocationItem [id=" + id + ", project=" + project + ", srNo=" + srNo + ", itemName=" + itemName
+				+ ", description=" + description + ", units=" + units + ", unitCost=" + unitCost + ", total=" + total
+				+ ", cmsContribution=" + cmsContribution + ", ngoContribution=" + ngoContribution
+				+ ", governmentContribution=" + governmentContribution + ", beneficiaryContribution="
+				+ beneficiaryContribution + ", subProject=" + subProject + ", budgetType=" + budgetType
+				+ ", monthlyTargets=" + monthlyTargets + "]";
+	}
+	
+	// ✅ ADD THIS METHOD - For Jackson deserialization
+
+	@com.fasterxml.jackson.annotation.JsonIgnore
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "sub_project_id")
+	private Project subProject;
+
+	// ✅ Existing getter for serialization (already in your code)
+	@com.fasterxml.jackson.annotation.JsonProperty("subProjectId")
+	public Long getSubProjectId() {
+	    return subProject != null ? subProject.getId() : null;
+	}
+
+	// ✅ NEW: Add this setter for deserialization
+	@com.fasterxml.jackson.annotation.JsonSetter("subProjectId")
+	public void setSubProjectId(Long subProjectId) {
+	    if (subProjectId != null && subProjectId > 0) {
+	        Project sp = new Project();
+	        sp.setId(subProjectId);
+	        this.subProject = sp;
+	    } else {
+	        this.subProject = null;
+	    }
+	}
+
+	// Keep your existing getters/setters
+	public Project getSubProject() { return subProject; }
+	public void setSubProject(Project subProject) { this.subProject = subProject; }
+
+
+
+	
 }

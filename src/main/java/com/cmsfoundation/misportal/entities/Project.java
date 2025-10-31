@@ -96,6 +96,17 @@ public class Project {
     @Column(name = "updated_at")
     private LocalDateTime projectUpdatedAt;
     
+    @JsonManagedReference
+    @OneToMany(mappedBy = "parentProject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Project> subProjects;
+
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_project_id")
+    private Project parentProject;
+
+
+    
     // ✅ NEW: Performance calculations based on MIS Reports
     public Double getCurrentAchievementPercentage() {
         if (misReports == null || misReports.isEmpty()) {
@@ -198,6 +209,22 @@ public class Project {
 
 	public Long getId() {
 		return id;
+	}
+
+	public List<Project> getSubProjects() {
+		return subProjects;
+	}
+
+	public void setSubProjects(List<Project> subProjects) {
+		this.subProjects = subProjects;
+	}
+
+	public Project getParentProject() {
+		return parentProject;
+	}
+
+	public void setParentProject(Project parentProject) {
+		this.parentProject = parentProject;
 	}
 
 	public void setId(Long id) {
@@ -380,6 +407,11 @@ public class Project {
 		this.projectUpdatedAt = projectUpdatedAt;
 	}
 
+	
+	
+	
+	
+	
 	@Override
 	public String toString() {
 		return "Project [id=" + id + ", projectType=" + projectType + ", projectHead=" + projectHead + ", projectName="
@@ -391,7 +423,7 @@ public class Project {
 				+ projectManager + ", budget=" + budget + ", workPlan=" + workPlan + ", budgetAllocationItems="
 				+ budgetAllocationItems + ", monthlyTargets=" + monthlyTargets + ", misReports=" + misReports
 				+ ", projectStatus=" + projectStatus + ", projectCreatedAt=" + projectCreatedAt + ", projectUpdatedAt="
-				+ projectUpdatedAt + "]";
+				+ projectUpdatedAt + ", subProjects=" + subProjects + ", parentProject=" + parentProject + "]";
 	}
 
 	public Project(Long id, String projectType, String projectHead, String projectName, String projectTheme,
@@ -400,7 +432,7 @@ public class Project {
 			String projectdpr, User projectManager, Budget budget, WorkPlan workPlan,
 			List<BudgetAllocationItem> budgetAllocationItems, List<MonthlyTarget> monthlyTargets,
 			List<MISReport> misReports, String projectStatus, LocalDateTime projectCreatedAt,
-			LocalDateTime projectUpdatedAt) {
+			LocalDateTime projectUpdatedAt, List<Project> subProjects, Project parentProject) {
 		super();
 		this.id = id;
 		this.projectType = projectType;
@@ -425,8 +457,10 @@ public class Project {
 		this.projectStatus = projectStatus;
 		this.projectCreatedAt = projectCreatedAt;
 		this.projectUpdatedAt = projectUpdatedAt;
+		this.subProjects = subProjects;
+		this.parentProject = parentProject;
 	}
-	
+
 	public String getProjectNgoPartner() { 
 	    return this.projectNgoPartnerName; 
 	}

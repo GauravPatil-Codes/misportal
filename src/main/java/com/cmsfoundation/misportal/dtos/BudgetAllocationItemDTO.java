@@ -14,6 +14,18 @@ public class BudgetAllocationItemDTO {
     private Double beneficiaryContribution;
     private BudgetHead budgetType;
     
+ // ✅ NEW: Subproject linking
+    private Long subProjectId;
+    private String subProjectName;  // For display
+    
+    // ... existing getters/setters
+    
+    public Long getSubProjectId() { return subProjectId; }
+    public void setSubProjectId(Long subProjectId) { this.subProjectId = subProjectId; }
+    
+    public String getSubProjectName() { return subProjectName; }
+    public void setSubProjectName(String subProjectName) { this.subProjectName = subProjectName; }
+    
     // Default constructor
     public BudgetAllocationItemDTO() {}
     

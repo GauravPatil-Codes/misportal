@@ -5,10 +5,12 @@ import com.cmsfoundation.misportal.entities.BudgetAllocationItem;
 import com.cmsfoundation.misportal.entities.BudgetHead;
 import com.cmsfoundation.misportal.entities.MonthlyTarget;
 import com.cmsfoundation.misportal.dtos.BudgetAllocationItemDTO;
+import com.cmsfoundation.misportal.dtos.BudgetAllocationItemWithSubProjectDTO;
 import com.cmsfoundation.misportal.dtos.BudgetAllocationItemWithTargetsDTO;
 import com.cmsfoundation.misportal.dtos.MonthlyTargetItemDTO;
 import com.cmsfoundation.misportal.dtos.ProjectCreateRequest;
 import com.cmsfoundation.misportal.dtos.ProjectUpdateNestedRequest;
+import com.cmsfoundation.misportal.dtos.SubProjectDTO;
 import com.cmsfoundation.misportal.services.ProjectService; // ✅ CHANGED: Use interface instead of implementation
 
 import com.cmsfoundation.misportal.services.BudgetAllocationItemService;
@@ -20,9 +22,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -386,84 +390,285 @@ public class ProjectController {
     }
     
     @PutMapping("/{id}/updateNestedDirect")
-	public ResponseEntity<Project> updateProjectNestedDirect(
-	        @PathVariable Long id,
-	        @RequestBody Project projectWithNestedData) {
-	    try {
-	        System.out.println("=== UPDATE NESTED DIRECT ===");
-	        System.out.println("Project ID: " + id);
-	        
-	        // Extract budget allocation items from the incoming project
-	        List<BudgetAllocationItemDTO> budgetItemDTOs = new ArrayList<>();
-	        List<MonthlyTargetItemDTO> monthlyTargetDTOs = new ArrayList<>();
-	        
-	        if (projectWithNestedData.getBudgetAllocationItems() != null) {
-	            System.out.println("Processing " + projectWithNestedData.getBudgetAllocationItems().size() + " budget items");
-	            for (BudgetAllocationItem item : projectWithNestedData.getBudgetAllocationItems()) {
-	                // Convert entity to DTO
-	                BudgetAllocationItemDTO dto = new BudgetAllocationItemDTO();
-	                dto.setSrNo(item.getSrNo());
-	                dto.setItemName(item.getItemName());
-	                dto.setDescription(item.getDescription());
-	                dto.setUnits(item.getUnits());
-	                dto.setUnitCost(item.getUnitCost());
-	                
-	                dto.setCmsContribution(item.getCmsContribution());
-	                dto.setNgoContribution(item.getNgoContribution());
-	                dto.setGovernmentContribution(item.getGovernmentContribution());
-	                dto.setBeneficiaryContribution(item.getBeneficiaryContribution());
-	                dto.setBudgetType(item.getBudgetType());
-	                budgetItemDTOs.add(dto);
-	                
-	                // Extract monthly targets from budget item
-	                if (item.getMonthlyTargets() != null) {
-	                    for (MonthlyTarget target : item.getMonthlyTargets()) {
-	                        MonthlyTargetItemDTO targetDTO = new MonthlyTargetItemDTO();
-	                        targetDTO.setTargetMonth(target.getTargetMonth());
-	                        targetDTO.setPlannedTarget(target.getPlannedTarget());
-	                        targetDTO.setTargetDescription(target.getTargetDescription());
-	                        targetDTO.setBudgetAllocationItemSrNo(item.getSrNo());
-	                        
-	                        // 🚨 ADD ALL THESE MISSING EXTRACTIONS:
-	                        targetDTO.setAchievedTarget(target.getAchievedTarget());
-	                        targetDTO.setDeviation(target.getDeviation());
-	                        targetDTO.setAchievementPercentage(target.getAchievementPercentage());
-	                        targetDTO.setDeviationReason(target.getDeviationReason());
-	                        targetDTO.setMitigationPlan(target.getMitigationPlan());
-	                        
-	                        monthlyTargetDTOs.add(targetDTO);
-	                    }
-	                }
-	            }
-	        }
-	        
-	        // Create request object
-	        ProjectCreateRequest convertedRequest = new ProjectCreateRequest();
-	        convertedRequest.setProjectType(projectWithNestedData.getProjectType());
-	        convertedRequest.setProjectHead(projectWithNestedData.getProjectHead());
-	        convertedRequest.setProjectName(projectWithNestedData.getProjectName());
-	        convertedRequest.setProjectTheme(projectWithNestedData.getProjectTheme());
-	        convertedRequest.setExpectedBeneficiaries(projectWithNestedData.getExpectedBeneficiaries());
-	        convertedRequest.setProjectLocation(projectWithNestedData.getProjectLocation());
-	        convertedRequest.setProjectStartDate(projectWithNestedData.getProjectStartDate());
-	        convertedRequest.setProjectEndDate(projectWithNestedData.getProjectEndDate());
-	        convertedRequest.setProjectDescription(projectWithNestedData.getProjectDescription());
-	        convertedRequest.setProjectObjectives(projectWithNestedData.getProjectObjectives());
-	        convertedRequest.setBudget(projectWithNestedData.getBudget());
-	        convertedRequest.setWorkPlan(projectWithNestedData.getWorkPlan());
-	        convertedRequest.setProjectStatus(projectWithNestedData.getProjectStatus());
-	        convertedRequest.setBudgetAllocationItems(budgetItemDTOs);
-	        convertedRequest.setMonthlyTargetItems(monthlyTargetDTOs);
-	        
-	        Project updatedProject = projectService.updateProjectWithDetails(id, convertedRequest);
-	        return ResponseEntity.ok(updatedProject);
-	        
-	    } catch (Exception ex) {
-	        System.out.println("ERROR in updateNestedDirect: " + ex.getMessage());
-	        ex.printStackTrace();
-	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-	    }
-	}
+    public ResponseEntity<Project> updateProjectNestedDirect(
+            @PathVariable Long id,
+            @RequestBody Project projectWithNestedData) {
+        try {
+            System.out.println("=== UPDATE NESTED DIRECT ===");
+            System.out.println("Project ID: " + id);
+            
+            // ✅ NEW: Extract subprojects from incoming project
+            List<SubProjectDTO> subProjectDTOs = new ArrayList<>();
+            if (projectWithNestedData.getSubProjects() != null && !projectWithNestedData.getSubProjects().isEmpty()) {
+                System.out.println("Processing " + projectWithNestedData.getSubProjects().size() + " subprojects");
+                for (Project subProject : projectWithNestedData.getSubProjects()) {
+                    SubProjectDTO dto = new SubProjectDTO();
+                    dto.setId(subProject.getId());
+                    dto.setProjectName(subProject.getProjectName());
+                    dto.setProjectDescription(subProject.getProjectDescription());
+                    dto.setProjectType(subProject.getProjectType());
+                    dto.setProjectTheme(subProject.getProjectTheme());
+                    dto.setProjectStartDate(subProject.getProjectStartDate());
+                    dto.setProjectEndDate(subProject.getProjectEndDate());
+                    dto.setProjectStatus(subProject.getProjectStatus());
+                    subProjectDTOs.add(dto);
+                }
+            }
+            
+            // Extract budget allocation items from the incoming project
+            List<BudgetAllocationItemDTO> budgetItemDTOs = new ArrayList<>();
+            List<MonthlyTargetItemDTO> monthlyTargetDTOs = new ArrayList<>();
+            
+            if (projectWithNestedData.getBudgetAllocationItems() != null) {
+                System.out.println("Processing " + projectWithNestedData.getBudgetAllocationItems().size() + " budget items");
+                for (BudgetAllocationItem item : projectWithNestedData.getBudgetAllocationItems()) {
+                    // Convert entity to DTO
+                    BudgetAllocationItemDTO dto = new BudgetAllocationItemDTO();
+                    dto.setSrNo(item.getSrNo());
+                    dto.setItemName(item.getItemName());
+                    dto.setDescription(item.getDescription());
+                    dto.setUnits(item.getUnits());
+                    dto.setUnitCost(item.getUnitCost());
+                    dto.setCmsContribution(item.getCmsContribution());
+                    dto.setNgoContribution(item.getNgoContribution());
+                    dto.setGovernmentContribution(item.getGovernmentContribution());
+                    dto.setBeneficiaryContribution(item.getBeneficiaryContribution());
+                    dto.setBudgetType(item.getBudgetType());
+                    
+                    
+                    
+                    // ✅ NEW: Extract subProjectId if present
+                    if (item.getSubProject() != null) {
+                        dto.setSubProjectId(item.getSubProject().getId());
+                        dto.setSubProjectName(item.getSubProject().getProjectName());
+                        System.out.println("Budget item '" + item.getItemName() + 
+                                         "' linked to subproject: " + item.getSubProject().getProjectName());
+                    }
+                    
+                    budgetItemDTOs.add(dto);
+                    
+                    // Extract monthly targets from budget item
+                    if (item.getMonthlyTargets() != null) {
+                        for (MonthlyTarget target : item.getMonthlyTargets()) {
+                            MonthlyTargetItemDTO targetDTO = new MonthlyTargetItemDTO();
+                            targetDTO.setTargetMonth(target.getTargetMonth());
+                            targetDTO.setPlannedTarget(target.getPlannedTarget());
+                            targetDTO.setTargetDescription(target.getTargetDescription());
+                            targetDTO.setBudgetAllocationItemSrNo(item.getSrNo());
+                            
+                            // ✅ Extract ALL monthly target fields
+                            targetDTO.setAchievedTarget(target.getAchievedTarget());
+                            targetDTO.setDeviation(target.getDeviation());
+                            targetDTO.setAchievementPercentage(target.getAchievementPercentage());
+                            targetDTO.setDeviationReason(target.getDeviationReason());
+                            targetDTO.setMitigationPlan(target.getMitigationPlan());
+                            
+                            monthlyTargetDTOs.add(targetDTO);
+                        }
+                    }
+                }
+            }
+            
+            // Create request object
+            ProjectCreateRequest convertedRequest = new ProjectCreateRequest();
+            convertedRequest.setProjectType(projectWithNestedData.getProjectType());
+            convertedRequest.setProjectHead(projectWithNestedData.getProjectHead());
+            convertedRequest.setProjectName(projectWithNestedData.getProjectName());
+            convertedRequest.setProjectTheme(projectWithNestedData.getProjectTheme());
+            convertedRequest.setExpectedBeneficiaries(projectWithNestedData.getExpectedBeneficiaries());
+            convertedRequest.setProjectLocation(projectWithNestedData.getProjectLocation());
+            convertedRequest.setProjectStartDate(projectWithNestedData.getProjectStartDate());
+            convertedRequest.setProjectEndDate(projectWithNestedData.getProjectEndDate());
+            convertedRequest.setProjectDescription(projectWithNestedData.getProjectDescription());
+            convertedRequest.setProjectObjectives(projectWithNestedData.getProjectObjectives());
+            convertedRequest.setBudget(projectWithNestedData.getBudget());
+            convertedRequest.setWorkPlan(projectWithNestedData.getWorkPlan());
+            convertedRequest.setProjectStatus(projectWithNestedData.getProjectStatus());
+            convertedRequest.setBudgetAllocationItems(budgetItemDTOs);
+            convertedRequest.setMonthlyTargetItems(monthlyTargetDTOs);
+            
+            // ✅ NEW: Set subprojects in request
+            convertedRequest.setSubProjects(subProjectDTOs);
+            
+            System.out.println("Converted request - Budget Items: " + budgetItemDTOs.size() + 
+                             ", Monthly Targets: " + monthlyTargetDTOs.size() +
+                             ", Subprojects: " + subProjectDTOs.size());
+            
+            Project updatedProject = projectService.updateProjectWithDetails(id, convertedRequest);
+            return ResponseEntity.ok(updatedProject);
+            
+        } catch (IllegalArgumentException ex) {
+            System.out.println("Validation ERROR: " + ex.getMessage());
+            return ResponseEntity.badRequest().body(null);
+        } catch (Exception ex) {
+            System.out.println("ERROR in updateNestedDirect: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    // ============================================================================
+    // Additional Controller Methods for Subproject Support
+    // ============================================================================
+
+    // Get budget items with subproject info
+    @GetMapping("/{projectId}/budget-items-with-subprojects")
+    public ResponseEntity<List<Map<String, Object>>> getBudgetItemsWithSubProjects(
+            @PathVariable Long projectId) {
+        try {
+            List<BudgetAllocationItem> items = budgetAllocationItemService.getBudgetItemsByProject(projectId);
+            
+            List<Map<String, Object>> result = items.stream()
+                .map(item -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", item.getId());
+                    map.put("srNo", item.getSrNo());
+                    map.put("itemName", item.getItemName());
+                    map.put("description", item.getDescription());
+                    map.put("units", item.getUnits());
+                    map.put("unitCost", item.getUnitCost());
+                    map.put("total", item.getTotal());
+                    map.put("budgetType", item.getBudgetType());
+                    map.put("cmsContribution", item.getCmsContribution());
+                    map.put("ngoContribution", item.getNgoContribution());
+                    map.put("governmentContribution", item.getGovernmentContribution());
+                    map.put("beneficiaryContribution", item.getBeneficiaryContribution());
+                    
+                    if (item.getSubProject() != null) {
+                        map.put("subProjectId", item.getSubProject().getId());
+                        map.put("subProjectName", item.getSubProject().getProjectName());
+                    } else {
+                        map.put("subProjectId", null);
+                        map.put("subProjectName", null);
+                    }
+                    
+                    return map;
+                })
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception ex) {
+            System.out.println("ERROR getting budget items with subprojects: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
+        }
+    }
+
+    // Get all subprojects for a project
+    @GetMapping("/{projectId}/subprojects")
+    public ResponseEntity<List<SubProjectDTO>> getSubProjects(@PathVariable Long projectId) {
+        try {
+            Optional<Project> projectOpt = projectService.getProjectById(projectId);
+            
+            if (projectOpt.isPresent() && projectOpt.get().getSubProjects() != null) {
+                List<SubProjectDTO> subProjects = projectOpt.get().getSubProjects().stream()
+                    .map(sp -> {
+                        SubProjectDTO dto = new SubProjectDTO();
+                        dto.setId(sp.getId());
+                        dto.setProjectName(sp.getProjectName());
+                        dto.setProjectDescription(sp.getProjectDescription());
+                        dto.setProjectType(sp.getProjectType());
+                        dto.setProjectTheme(sp.getProjectTheme());
+                        dto.setProjectStartDate(sp.getProjectStartDate());
+                        dto.setProjectEndDate(sp.getProjectEndDate());
+                        dto.setProjectStatus(sp.getProjectStatus());
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+                
+                return ResponseEntity.ok(subProjects);
+            }
+            
+            return ResponseEntity.ok(new ArrayList<>());
+        } catch (Exception ex) {
+            System.out.println("ERROR getting subprojects: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
+        }
+    }
+
+    // ✅ NEW: Create or update a subproject
+    @PostMapping("/{projectId}/subprojects")
+    public ResponseEntity<SubProjectDTO> createSubProject(
+            @PathVariable Long projectId,
+            @RequestBody SubProjectDTO subProjectDTO) {
+        try {
+            Optional<Project> parentProjectOpt = projectService.getProjectById(projectId);
+            
+            if (parentProjectOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Project parentProject = parentProjectOpt.get();
+            
+            // Create subproject
+            Project subProject = new Project();
+            subProject.setProjectName(subProjectDTO.getProjectName());
+            subProject.setProjectDescription(subProjectDTO.getProjectDescription());
+            subProject.setProjectType(subProjectDTO.getProjectType() != null ? 
+                                      subProjectDTO.getProjectType() : parentProject.getProjectType());
+            subProject.setProjectTheme(subProjectDTO.getProjectTheme() != null ? 
+                                       subProjectDTO.getProjectTheme() : parentProject.getProjectTheme());
+            subProject.setProjectStartDate(subProjectDTO.getProjectStartDate() != null ? 
+                                           subProjectDTO.getProjectStartDate() : parentProject.getProjectStartDate());
+            subProject.setProjectEndDate(subProjectDTO.getProjectEndDate() != null ? 
+                                         subProjectDTO.getProjectEndDate() : parentProject.getProjectEndDate());
+            subProject.setProjectStatus(subProjectDTO.getProjectStatus() != null ? 
+                                        subProjectDTO.getProjectStatus() : "PLANNED");
+            subProject.setParentProject(parentProject);
+            
+            // Copy parent attributes
+            subProject.setProjectLocation(parentProject.getProjectLocation());
+            subProject.setProjectHead(parentProject.getProjectHead());
+            subProject.setProjectNgoPartner(parentProject.getProjectNgoPartner());
+            
+            // Save to database (assuming you have a method in service)
+            Project savedSubProject = projectService.createProject(subProject);
+            
+            // Convert to DTO for response
+            SubProjectDTO responseDTO = new SubProjectDTO();
+            responseDTO.setId(savedSubProject.getId());
+            responseDTO.setProjectName(savedSubProject.getProjectName());
+            responseDTO.setProjectDescription(savedSubProject.getProjectDescription());
+            responseDTO.setProjectType(savedSubProject.getProjectType());
+            responseDTO.setProjectTheme(savedSubProject.getProjectTheme());
+            responseDTO.setProjectStartDate(savedSubProject.getProjectStartDate());
+            responseDTO.setProjectEndDate(savedSubProject.getProjectEndDate());
+            responseDTO.setProjectStatus(savedSubProject.getProjectStatus());
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+        } catch (Exception ex) {
+            System.out.println("ERROR creating subproject: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    // ✅ NEW: Delete a subproject
+    @DeleteMapping("/{projectId}/subprojects/{subProjectId}")
+    public ResponseEntity<Void> deleteSubProject(
+            @PathVariable Long projectId,
+            @PathVariable Long subProjectId) {
+        try {
+            // Verify the subproject belongs to this parent project
+            Optional<Project> subProjectOpt = projectService.getProjectById(subProjectId);
+            
+            if (subProjectOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            Project subProject = subProjectOpt.get();
+            if (subProject.getParentProject() == null || 
+                !subProject.getParentProject().getId().equals(projectId)) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Delete the subproject
+            projectService.deleteProject(subProjectId);
+            
+            return ResponseEntity.noContent().build();
+        } catch (Exception ex) {
+            System.out.println("ERROR deleting subproject: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 
 }
