@@ -57,6 +57,13 @@ public class ProjectController {
         return new ResponseEntity<>(projects, HttpStatus.OK);
     }
 
+    // ✅ GET ALL PROJECTS INCLUDING SUBPROJECTS
+    @GetMapping("/all")
+    public ResponseEntity<List<Project>> getAllProjectsWithSubprojects() {
+        List<Project> projects = projectService.getAllProjectsWithSubprojects();
+        return new ResponseEntity<>(projects, HttpStatus.OK);
+    }
+
     // ✅ GET PROJECT BY ID
     @GetMapping("/{id}")
     public ResponseEntity<Project> getProjectById(@PathVariable Long id) {

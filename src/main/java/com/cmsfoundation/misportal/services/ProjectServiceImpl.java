@@ -37,27 +37,27 @@ import java.util.stream.Collectors;
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
-	@Autowired
-	private ProjectRepository projectRepository;
+        @Autowired
+        private ProjectRepository projectRepository;
 
-	@Autowired
-	private MonthlyTargetRepository monthlyTargetRepository;
+        @Autowired
+        private MonthlyTargetRepository monthlyTargetRepository;
 
-	@Autowired
-	private BudgetAllocationItemRepository budgetAllocationItemRepository;
+        @Autowired
+        private BudgetAllocationItemRepository budgetAllocationItemRepository;
 
-	@Autowired
-	private BudgetAllocationItemService budgetAllocationItemService;
+        @Autowired
+        private BudgetAllocationItemService budgetAllocationItemService;
 
-	@Autowired
-	private NGORepository ngoRepository;
+        @Autowired
+        private NGORepository ngoRepository;
 
-	@Autowired
-	private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-	@Override
-	@Transactional
-	    public Project createProjectWithDetails(ProjectCreateRequest request) {
+        @Override
+        @Transactional
+            public Project createProjectWithDetails(ProjectCreateRequest request) {
         // Create basic project entity
         Project project = new Project();
         project.setProjectType(request.getProjectType());
@@ -289,82 +289,113 @@ public class ProjectServiceImpl implements ProjectService {
         return monthlyTargets;
     }
 
-	
-	
+        
+        
 
-	
+        
 
-	
+        
 
-	@Override
-	public Project createProject(Project project) {
-		return projectRepository.save(project);
-	}
+        @Override
+        public Project createProject(Project project) {
+                return projectRepository.save(project);
+        }
 
-	@Override
-	public List<Project> getAllProjects() {
-		return projectRepository.findAll();
-	}
+        @Override
+        public List<Project> getAllProjects() {
+                // Only return main projects (projects without parent)
+                return projectRepository.findByParentProjectIsNull();
+        }
 
-	@Override
-	public Optional<Project> getProjectById(Long id) {
-		return projectRepository.findById(id);
-	}
+        // New method to get all projects including subprojects
+        public List<Project> getAllProjectsWithSubprojects() {
+                return projectRepository.findAll();
+        }
 
-	@Override
-	@Transactional
-	public Project updateProject(Long id, Project project) {
-		Project existing = projectRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
+        @Override
+        @Transactional
+        public Optional<Project> getProjectById(Long id) {
+                Optional<Project> projectOpt = projectRepository.findById(id);
+                if (projectOpt.isPresent()) {
+                        Project project = projectOpt.get();
+                        // Initialize lazy-loaded relationships to avoid serialization issues
+                        if (project.getNgoPartner() != null) {
+                                project.getNgoPartner().getId(); // Trigger initialization
+                        }
+                        if (project.getProjectManager() != null) {
+                                project.getProjectManager().getId(); // Trigger initialization
+                        }
+                        if (project.getParentProject() != null) {
+                                project.getParentProject().getId(); // Trigger initialization
+                        }
+                        return Optional.of(project);
+                }
+                return Optional.empty();
+        }
 
-		// Update basic project fields
-		if (project.getProjectType() != null) {
-			existing.setProjectType(project.getProjectType());
-		}
-		if (project.getProjectHead() != null) {
-			existing.setProjectHead(project.getProjectHead());
-		}
-		if (project.getProjectName() != null) {
-			existing.setProjectName(project.getProjectName());
-		}
-		if (project.getProjectTheme() != null) {
-			existing.setProjectTheme(project.getProjectTheme());
-		}
-		if (project.getProjectNgoPartner() != null) {
-			existing.setProjectNgoPartner(project.getProjectNgoPartner());
-		}
-		if (project.getExpectedBeneficiaries() != null) {
-			existing.setExpectedBeneficiaries(project.getExpectedBeneficiaries());
-		}
-		if (project.getProjectLocation() != null) {
-			existing.setProjectLocation(project.getProjectLocation());
-		}
-		if (project.getProjectStartDate() != null) {
-			existing.setProjectStartDate(project.getProjectStartDate());
-		}
-		if (project.getProjectEndDate() != null) {
-			existing.setProjectEndDate(project.getProjectEndDate());
-		}
-		if (project.getProjectDescription() != null) {
-			existing.setProjectDescription(project.getProjectDescription());
-		}
-		if (project.getProjectObjectives() != null) {
-			existing.setProjectObjectives(project.getProjectObjectives());
-		}
-		if (project.getBudget() != null) {
-			existing.setBudget(project.getBudget());
-		}
-		if (project.getWorkPlan() != null) {
-			existing.setWorkPlan(project.getWorkPlan());
-		}
-		if (project.getProjectStatus() != null) {
-			existing.setProjectStatus(project.getProjectStatus());
-		}
+        @Override
+        @Transactional
+        public Project updateProject(Long id, Project project) {
+                Project existing = projectRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
 
-		return projectRepository.save(existing);
-	}
+                // Update basic project fields
+                if (project.getProjectType() != null) {
+                        existing.setProjectType(project.getProjectType());
+                }
+                if (project.getProjectHead() != null) {
+                        existing.setProjectHead(project.getProjectHead());
+                }
+                if (project.getProjectName() != null) {
+                        existing.setProjectName(project.getProjectName());
+                }
+                if (project.getProjectTheme() != null) {
+                        existing.setProjectTheme(project.getProjectTheme());
+                }
+                if (project.getProjectNgoPartner() != null) {
+                        existing.setProjectNgoPartner(project.getProjectNgoPartner());
+                }
+                if (project.getExpectedBeneficiaries() != null) {
+                        existing.setExpectedBeneficiaries(project.getExpectedBeneficiaries());
+                }
+                if (project.getProjectLocation() != null) {
+                        existing.setProjectLocation(project.getProjectLocation());
+                }
+                if (project.getProjectStartDate() != null) {
+                        existing.setProjectStartDate(project.getProjectStartDate());
+                }
+                if (project.getProjectEndDate() != null) {
+                        existing.setProjectEndDate(project.getProjectEndDate());
+                }
+                if (project.getProjectDescription() != null) {
+                        existing.setProjectDescription(project.getProjectDescription());
+                }
+                if (project.getProjectObjectives() != null) {
+                        existing.setProjectObjectives(project.getProjectObjectives());
+                }
+                if (project.getProjectdpr() != null) {
+                        existing.setProjectdpr(project.getProjectdpr());
+                }
+                if (project.getNgoPartner() != null) {
+                        existing.setNgoPartner(project.getNgoPartner());
+                }
+                if (project.getProjectManager() != null) {
+                        existing.setProjectManager(project.getProjectManager());
+                }
+                if (project.getBudget() != null) {
+                        existing.setBudget(project.getBudget());
+                }
+                if (project.getWorkPlan() != null) {
+                        existing.setWorkPlan(project.getWorkPlan());
+                }
+                if (project.getProjectStatus() != null) {
+                        existing.setProjectStatus(project.getProjectStatus());
+                }
 
-	 // ✅ UPDATED: updateProjectWithDetails with subproject support
+                return projectRepository.save(existing);
+        }
+
+         // ✅ UPDATED: updateProjectWithDetails with subproject support
     @Override
     @Transactional
     public Project updateProjectWithDetails(Long id, ProjectCreateRequest request) {
@@ -527,8 +558,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     private void updateExistingBudgetItems(Project project, List<BudgetAllocationItemDTO> budgetItemDTOs,
             List<MonthlyTargetItemDTO> monthlyTargetDTOs) {
-    	
-    	 // ✅ ADD THIS LINE - Refresh project to load subProjects
+        
+         // ✅ ADD THIS LINE - Refresh project to load subProjects
         project = projectRepository.findById(project.getId())
             .orElseThrow(() -> new RuntimeException("Project not found"));
         
@@ -700,341 +731,341 @@ public class ProjectServiceImpl implements ProjectService {
         System.out.println("=== END UPDATE MONTHLY TARGETS ===");
     }
 
-	// ✅ NEW METHOD: Update existing budget items instead of recreating
+        // ✅ NEW METHOD: Update existing budget items instead of recreating
 
-	
+        
 
-	private void updateBasicProjectFields(Project existing, ProjectCreateRequest request) {
-		if (request.getProjectType() != null) {
-			existing.setProjectType(request.getProjectType());
-		}
-		if (request.getProjectHead() != null) {
-			existing.setProjectHead(request.getProjectHead());
-		}
-		if (request.getProjectName() != null) {
-			existing.setProjectName(request.getProjectName());
-		}
-		if (request.getProjectTheme() != null) {
-			existing.setProjectTheme(request.getProjectTheme());
-		}
-		if (request.getProjectNgoPartner() != null) {
-			existing.setProjectNgoPartner(request.getProjectNgoPartner());
-		}
-		if (request.getExpectedBeneficiaries() != null) {
-			existing.setExpectedBeneficiaries(request.getExpectedBeneficiaries());
-		}
-		if (request.getProjectLocation() != null) {
-			existing.setProjectLocation(request.getProjectLocation());
-		}
-		if (request.getProjectStartDate() != null) {
-			existing.setProjectStartDate(request.getProjectStartDate());
-		}
-		if (request.getProjectEndDate() != null) {
-			existing.setProjectEndDate(request.getProjectEndDate());
-		}
-		if (request.getProjectDescription() != null) {
-			existing.setProjectDescription(request.getProjectDescription());
-		}
-		if (request.getProjectObjectives() != null) {
-			existing.setProjectObjectives(request.getProjectObjectives());
-		}
-		if (request.getProjectdpr() != null) {
-			existing.setProjectdpr(request.getProjectdpr());
-		}
-		if (request.getProjectStatus() != null) {
-			existing.setProjectStatus(request.getProjectStatus());
-		}
-		if (request.getBudget() != null) {
-			existing.setBudget(request.getBudget());
-		}
-		if (request.getWorkPlan() != null) {
-			existing.setWorkPlan(request.getWorkPlan());
-		}
-	}
+        private void updateBasicProjectFields(Project existing, ProjectCreateRequest request) {
+                if (request.getProjectType() != null) {
+                        existing.setProjectType(request.getProjectType());
+                }
+                if (request.getProjectHead() != null) {
+                        existing.setProjectHead(request.getProjectHead());
+                }
+                if (request.getProjectName() != null) {
+                        existing.setProjectName(request.getProjectName());
+                }
+                if (request.getProjectTheme() != null) {
+                        existing.setProjectTheme(request.getProjectTheme());
+                }
+                if (request.getProjectNgoPartner() != null) {
+                        existing.setProjectNgoPartner(request.getProjectNgoPartner());
+                }
+                if (request.getExpectedBeneficiaries() != null) {
+                        existing.setExpectedBeneficiaries(request.getExpectedBeneficiaries());
+                }
+                if (request.getProjectLocation() != null) {
+                        existing.setProjectLocation(request.getProjectLocation());
+                }
+                if (request.getProjectStartDate() != null) {
+                        existing.setProjectStartDate(request.getProjectStartDate());
+                }
+                if (request.getProjectEndDate() != null) {
+                        existing.setProjectEndDate(request.getProjectEndDate());
+                }
+                if (request.getProjectDescription() != null) {
+                        existing.setProjectDescription(request.getProjectDescription());
+                }
+                if (request.getProjectObjectives() != null) {
+                        existing.setProjectObjectives(request.getProjectObjectives());
+                }
+                if (request.getProjectdpr() != null) {
+                        existing.setProjectdpr(request.getProjectdpr());
+                }
+                if (request.getProjectStatus() != null) {
+                        existing.setProjectStatus(request.getProjectStatus());
+                }
+                if (request.getBudget() != null) {
+                        existing.setBudget(request.getBudget());
+                }
+                if (request.getWorkPlan() != null) {
+                        existing.setWorkPlan(request.getWorkPlan());
+                }
+        }
 
-	// ✅ NEW API Methods for Frontend Integration
-	@Override
-	public List<BudgetAllocationItem> getBudgetAllocationItemsByProject(Long projectId) {
-		return budgetAllocationItemService.getBudgetItemsByProject(projectId);
-	}
+        // ✅ NEW API Methods for Frontend Integration
+        @Override
+        public List<BudgetAllocationItem> getBudgetAllocationItemsByProject(Long projectId) {
+                return budgetAllocationItemService.getBudgetItemsByProject(projectId);
+        }
 
-	@Override
-	public List<BudgetAllocationItem> getBudgetAllocationItemsByProjectAndBudgetHead(Long projectId,
-			BudgetHead budgetHead) {
-		return budgetAllocationItemService.getBudgetItemsByProjectAndHead(projectId, budgetHead);
-	}
+        @Override
+        public List<BudgetAllocationItem> getBudgetAllocationItemsByProjectAndBudgetHead(Long projectId,
+                        BudgetHead budgetHead) {
+                return budgetAllocationItemService.getBudgetItemsByProjectAndHead(projectId, budgetHead);
+        }
 
-	@Override
-	public Map<BudgetHead, Double> getBudgetSummaryByProject(Long projectId) {
-		return budgetAllocationItemService.getBudgetSummaryByProject(projectId);
-	}
+        @Override
+        public Map<BudgetHead, Double> getBudgetSummaryByProject(Long projectId) {
+                return budgetAllocationItemService.getBudgetSummaryByProject(projectId);
+        }
 
-	@Override
-	public List<MonthlyTarget> getMonthlyTargetsByProject(Long projectId) {
-		Optional<Project> project = projectRepository.findById(projectId);
-		return project.map(Project::getMonthlyTargets).orElse(new ArrayList<>());
-	}
+        @Override
+        public List<MonthlyTarget> getMonthlyTargetsByProject(Long projectId) {
+                Optional<Project> project = projectRepository.findById(projectId);
+                return project.map(Project::getMonthlyTargets).orElse(new ArrayList<>());
+        }
 
-	@Override
-	public List<MonthlyTarget> getMonthlyTargetsByBudgetItem(Long budgetItemId) {
-		return monthlyTargetRepository.findByBudgetAllocationItemId(budgetItemId);
-	}
+        @Override
+        public List<MonthlyTarget> getMonthlyTargetsByBudgetItem(Long budgetItemId) {
+                return monthlyTargetRepository.findByBudgetAllocationItemId(budgetItemId);
+        }
 
-	@Override
-	public Map<String, Object> getProjectPerformanceMetrics(Long projectId) {
-		Optional<Project> projectOpt = projectRepository.findById(projectId);
-		if (projectOpt.isPresent()) {
-			Project project = projectOpt.get();
-			Map<String, Object> metrics = new HashMap<>();
+        @Override
+        public Map<String, Object> getProjectPerformanceMetrics(Long projectId) {
+                Optional<Project> projectOpt = projectRepository.findById(projectId);
+                if (projectOpt.isPresent()) {
+                        Project project = projectOpt.get();
+                        Map<String, Object> metrics = new HashMap<>();
 
-			metrics.put("totalBudget", project.getTotalBudgetFromItems());
-			metrics.put("budgetByHead", project.getBudgetSummaryByHead());
-			metrics.put("overallPerformance", project.getOverallAchievementPercentage());
-			metrics.put("performanceByHead", project.getPerformanceByBudgetHead());
-			metrics.put("totalMonthlyTargets",
-					project.getMonthlyTargets() != null ? project.getMonthlyTargets().size() : 0);
-			metrics.put("budgetItemsCount",
-					project.getBudgetAllocationItems() != null ? project.getBudgetAllocationItems().size() : 0);
+                        metrics.put("totalBudget", project.getTotalBudgetFromItems());
+                        metrics.put("budgetByHead", project.getBudgetSummaryByHead());
+                        metrics.put("overallPerformance", project.getOverallAchievementPercentage());
+                        metrics.put("performanceByHead", project.getPerformanceByBudgetHead());
+                        metrics.put("totalMonthlyTargets",
+                                        project.getMonthlyTargets() != null ? project.getMonthlyTargets().size() : 0);
+                        metrics.put("budgetItemsCount",
+                                        project.getBudgetAllocationItems() != null ? project.getBudgetAllocationItems().size() : 0);
 
-			return metrics;
-		}
-		throw new RuntimeException("Project not found with id: " + projectId);
-	}
+                        return metrics;
+                }
+                throw new RuntimeException("Project not found with id: " + projectId);
+        }
 
-	@Override
-	public void deleteProject(Long id) {
-		if (projectRepository.existsById(id)) {
-			projectRepository.deleteById(id);
-		} else {
-			throw new RuntimeException("Project not found with id: " + id);
-		}
-	}
+        @Override
+        public void deleteProject(Long id) {
+                if (projectRepository.existsById(id)) {
+                        projectRepository.deleteById(id);
+                } else {
+                        throw new RuntimeException("Project not found with id: " + id);
+                }
+        }
 
-	// ✅ FIXED: Method names to match controller expectations
-	@Override
-	public Double getTotalBudget() {
-		Double total = projectRepository.getTotalBudgetAllProjects();
-		return total != null ? total : 0.0;
-	}
+        // ✅ FIXED: Method names to match controller expectations
+        @Override
+        public Double getTotalBudget() {
+                Double total = projectRepository.getTotalBudgetAllProjects();
+                return total != null ? total : 0.0;
+        }
 
-	@Override
-	public Double getBudgetUtilized() {
-		Double utilized = projectRepository.getTotalBudgetUtilized();
-		return utilized != null ? utilized : 0.0;
-	}
+        @Override
+        public Double getBudgetUtilized() {
+                Double utilized = projectRepository.getTotalBudgetUtilized();
+                return utilized != null ? utilized : 0.0;
+        }
 
-	@Override
-	public Integer getTotalBeneficiaries() {
-		Integer total = projectRepository.getTotalBeneficiaries();
-		return total != null ? total : 0;
-	}
+        @Override
+        public Integer getTotalBeneficiaries() {
+                Integer total = projectRepository.getTotalBeneficiaries();
+                return total != null ? total : 0;
+        }
 
-	@Override
-	public List<Project> searchProjectByString(String searchTerm) {
-		return projectRepository.searchProjectsByString(searchTerm);
-	}
+        @Override
+        public List<Project> searchProjectByString(String searchTerm) {
+                return projectRepository.searchProjectsByString(searchTerm);
+        }
 
-	@Override
-	public List<Project> getProjectByStatus(String status) {
-		return projectRepository.findByProjectStatus(status);
-	}
+        @Override
+        public List<Project> getProjectByStatus(String status) {
+                return projectRepository.findByProjectStatus(status);
+        }
 
-	@Override
-	public List<Project> getProjectByTheme(String theme) {
-		return projectRepository.findByProjectTheme(theme);
-	}
+        @Override
+        public List<Project> getProjectByTheme(String theme) {
+                return projectRepository.findByProjectTheme(theme);
+        }
 
-	@Override
-	public List<Project> getProjectByMonth(int month, int year) {
-		return projectRepository.getProjectsByMonth(month, year);
-	}
+        @Override
+        public List<Project> getProjectByMonth(int month, int year) {
+                return projectRepository.getProjectsByMonth(month, year);
+        }
 
-	@Override
-	public Map<String, Object> getProjectAnalytics() {
-		Map<String, Object> analytics = new HashMap<>();
-		analytics.put("totalProjects", projectRepository.count());
-		analytics.put("totalBudget", getTotalBudget());
-		analytics.put("budgetUtilized", getBudgetUtilized());
-		analytics.put("totalBeneficiaries", getTotalBeneficiaries());
-		analytics.put("projectsByStatus", getProjectCountByStatus());
-		analytics.put("projectsByTheme", getProjectCountByTheme());
-		return analytics;
-	}
+        @Override
+        public Map<String, Object> getProjectAnalytics() {
+                Map<String, Object> analytics = new HashMap<>();
+                analytics.put("totalProjects", projectRepository.count());
+                analytics.put("totalBudget", getTotalBudget());
+                analytics.put("budgetUtilized", getBudgetUtilized());
+                analytics.put("totalBeneficiaries", getTotalBeneficiaries());
+                analytics.put("projectsByStatus", getProjectCountByStatus());
+                analytics.put("projectsByTheme", getProjectCountByTheme());
+                return analytics;
+        }
 
-	@Override
-	public List<Project> getProjectByPerformance(String performanceCategory) {
-		switch (performanceCategory.toLowerCase()) {
-		case "excellent":
-			return projectRepository.getProjectsByPerformance(80.0, 100.0);
-		case "good":
-			return projectRepository.getProjectsByPerformance(50.0, 79.9);
-		case "attention":
-			return projectRepository.getProjectsByPerformance(30.0, 49.9);
-		case "critical":
-			return projectRepository.getProjectsByPerformance(0.0, 29.9);
-		default:
-			return getAllProjects();
-		}
-	}
+        @Override
+        public List<Project> getProjectByPerformance(String performanceCategory) {
+                switch (performanceCategory.toLowerCase()) {
+                case "excellent":
+                        return projectRepository.getProjectsByPerformance(80.0, 100.0);
+                case "good":
+                        return projectRepository.getProjectsByPerformance(50.0, 79.9);
+                case "attention":
+                        return projectRepository.getProjectsByPerformance(30.0, 49.9);
+                case "critical":
+                        return projectRepository.getProjectsByPerformance(0.0, 29.9);
+                default:
+                        return getAllProjects();
+                }
+        }
 
-	@Override
-	public List<Project> getProjectByNGO(String ngoPartner) {
-		return projectRepository.findByNgoPartnerNgoName(ngoPartner);
-	}
+        @Override
+        public List<Project> getProjectByNGO(String ngoPartner) {
+                return projectRepository.findByNgoPartnerNgoName(ngoPartner);
+        }
 
-	@Override
-	public List<Project> getAllIVDPProjects() {
-		return projectRepository.getAllIVDPProjects();
-	}
+        @Override
+        public List<Project> getAllIVDPProjects() {
+                return projectRepository.getAllIVDPProjects();
+        }
 
-	@Override
-	public List<Project> getAllThematicProjects() {
-		return projectRepository.getAllThematicProjects();
-	}
+        @Override
+        public List<Project> getAllThematicProjects() {
+                return projectRepository.getAllThematicProjects();
+        }
 
-	@Override
-	public Map<String, Long> getProjectCountByStatus() {
-		List<Object[]> results = projectRepository.getProjectCountByStatus();
-		Map<String, Long> statusCount = new HashMap<>();
-		for (Object[] result : results) {
-			statusCount.put((String) result[0], (Long) result[1]);
-		}
-		return statusCount;
-	}
+        @Override
+        public Map<String, Long> getProjectCountByStatus() {
+                List<Object[]> results = projectRepository.getProjectCountByStatus();
+                Map<String, Long> statusCount = new HashMap<>();
+                for (Object[] result : results) {
+                        statusCount.put((String) result[0], (Long) result[1]);
+                }
+                return statusCount;
+        }
 
-	@Override
-	public Map<String, Long> getProjectCountByTheme() {
-		List<Object[]> results = projectRepository.getProjectCountByTheme();
-		Map<String, Long> themeCount = new HashMap<>();
-		for (Object[] result : results) {
-			themeCount.put((String) result[0], (Long) result[1]);
-		}
-		return themeCount;
-	}
+        @Override
+        public Map<String, Long> getProjectCountByTheme() {
+                List<Object[]> results = projectRepository.getProjectCountByTheme();
+                Map<String, Long> themeCount = new HashMap<>();
+                for (Object[] result : results) {
+                        themeCount.put((String) result[0], (Long) result[1]);
+                }
+                return themeCount;
+        }
 
-	// Method to recalculate budget when budget items are updated
-	@Override
-	@Transactional
-	public Project recalculateBudgetSummary(Long projectId) {
-		Optional<Project> projectOpt = projectRepository.findById(projectId);
-		if (projectOpt.isPresent()) {
-			Project project = projectOpt.get();
+        // Method to recalculate budget when budget items are updated
+        @Override
+        @Transactional
+        public Project recalculateBudgetSummary(Long projectId) {
+                Optional<Project> projectOpt = projectRepository.findById(projectId);
+                if (projectOpt.isPresent()) {
+                        Project project = projectOpt.get();
 
-			// Recalculate budget summary
-			if (project.getBudget() == null) {
-				project.setBudget(new Budget());
-			}
+                        // Recalculate budget summary
+                        if (project.getBudget() == null) {
+                                project.setBudget(new Budget());
+                        }
 
-			project.getBudget().calculateTotalsFromItems(project.getBudgetAllocationItems());
-			return projectRepository.save(project);
-		}
-		throw new RuntimeException("Project not found with id: " + projectId);
-	}
+                        project.getBudget().calculateTotalsFromItems(project.getBudgetAllocationItems());
+                        return projectRepository.save(project);
+                }
+                throw new RuntimeException("Project not found with id: " + projectId);
+        }
 
-	// ✅ NEW: Get projects by NGO
-	@Override
-	public List<Project> getProjectsByNGOId(Long ngoId) {
-		return projectRepository.findByNgoPartnerId(ngoId);
-	}
+        // ✅ NEW: Get projects by NGO
+        @Override
+        public List<Project> getProjectsByNGOId(Long ngoId) {
+                return projectRepository.findByNgoPartnerId(ngoId);
+        }
 
-	@Override
-	public List<Project> getProjectsByNGOName(String ngoName) {
-		return projectRepository.findByNgoPartnerNgoName(ngoName);
-	}
+        @Override
+        public List<Project> getProjectsByNGOName(String ngoName) {
+                return projectRepository.findByNgoPartnerNgoName(ngoName);
+        }
 
-	// ✅ NEW: Get projects by manager
-	@Override
-	public List<Project> getProjectsByManager(Long userId) {
-		return projectRepository.findByProjectManagerId(userId);
-	}
+        // ✅ NEW: Get projects by manager
+        @Override
+        public List<Project> getProjectsByManager(Long userId) {
+                return projectRepository.findByProjectManagerId(userId);
+        }
 
-	// ✅ NEW: Create project with NGO assignment
-	@Override
-	@Transactional
-	public Project createProjectWithNGO(ProjectCreateRequest request) {
-		Project project = createProjectWithDetails(request);
+        // ✅ NEW: Create project with NGO assignment
+        @Override
+        @Transactional
+        public Project createProjectWithNGO(ProjectCreateRequest request) {
+                Project project = createProjectWithDetails(request);
 
-		// Assign NGO if specified
-		if (request.getNgoPartnerId() != null) {
-			Optional<NGO> ngoOpt = ngoRepository.findById(request.getNgoPartnerId());
-			if (ngoOpt.isPresent()) {
-				project.setNgoPartner(ngoOpt.get());
-			}
-		}
+                // Assign NGO if specified
+                if (request.getNgoPartnerId() != null) {
+                        Optional<NGO> ngoOpt = ngoRepository.findById(request.getNgoPartnerId());
+                        if (ngoOpt.isPresent()) {
+                                project.setNgoPartner(ngoOpt.get());
+                        }
+                }
 
-		// Assign Project Manager if specified
-		if (request.getProjectManagerId() != null) {
-			Optional<User> managerOpt = userRepository.findById(request.getProjectManagerId());
-			if (managerOpt.isPresent()) {
-				project.setProjectManager(managerOpt.get());
-			}
-		}
+                // Assign Project Manager if specified
+                if (request.getProjectManagerId() != null) {
+                        Optional<User> managerOpt = userRepository.findById(request.getProjectManagerId());
+                        if (managerOpt.isPresent()) {
+                                project.setProjectManager(managerOpt.get());
+                        }
+                }
 
-		return projectRepository.save(project);
-	}
+                return projectRepository.save(project);
+        }
 
-	// ✅ NEW: Assign NGO to existing project
-	@Override
-	@Transactional
-	public Project assignNGOToProject(Long projectId, Long ngoId) {
-		Project project = projectRepository.findById(projectId)
-				.orElseThrow(() -> new RuntimeException("Project not found"));
+        // ✅ NEW: Assign NGO to existing project
+        @Override
+        @Transactional
+        public Project assignNGOToProject(Long projectId, Long ngoId) {
+                Project project = projectRepository.findById(projectId)
+                                .orElseThrow(() -> new RuntimeException("Project not found"));
 
-		NGO ngo = ngoRepository.findById(ngoId).orElseThrow(() -> new RuntimeException("NGO not found"));
+                NGO ngo = ngoRepository.findById(ngoId).orElseThrow(() -> new RuntimeException("NGO not found"));
 
-		project.setNgoPartner(ngo);
-		return projectRepository.save(project);
-	}
+                project.setNgoPartner(ngo);
+                return projectRepository.save(project);
+        }
 
-	// ✅ NEW: Get NGO performance for project
-	@Override
-	public Map<String, Object> getProjectNGOPerformance(Long projectId) {
-		Optional<Project> projectOpt = projectRepository.findById(projectId);
-		if (projectOpt.isPresent() && projectOpt.get().getNgoPartner() != null) {
-			Project project = projectOpt.get();
-			NGO ngo = project.getNgoPartner();
+        // ✅ NEW: Get NGO performance for project
+        @Override
+        public Map<String, Object> getProjectNGOPerformance(Long projectId) {
+                Optional<Project> projectOpt = projectRepository.findById(projectId);
+                if (projectOpt.isPresent() && projectOpt.get().getNgoPartner() != null) {
+                        Project project = projectOpt.get();
+                        NGO ngo = project.getNgoPartner();
 
-			Map<String, Object> performance = new HashMap<>();
-			performance.put("ngoName", ngo.getNgoName());
-			performance.put("ngoId", ngo.getId());
-			performance.put("projectPerformance", project.getCurrentAchievementPercentage());
-			performance.put("ngoOverallMetrics", ngo.getNGOPerformanceMetrics());
-			performance.put("financialPerformance", project.getFinancialPerformance());
+                        Map<String, Object> performance = new HashMap<>();
+                        performance.put("ngoName", ngo.getNgoName());
+                        performance.put("ngoId", ngo.getId());
+                        performance.put("projectPerformance", project.getCurrentAchievementPercentage());
+                        performance.put("ngoOverallMetrics", ngo.getNGOPerformanceMetrics());
+                        performance.put("financialPerformance", project.getFinancialPerformance());
 
-			return performance;
-		}
-		throw new RuntimeException("Project not found or no NGO assigned");
-	}
+                        return performance;
+                }
+                throw new RuntimeException("Project not found or no NGO assigned");
+        }
 
-	// ✅ NEW: Get NGO project dashboard
-	@Override
-	public Map<String, Object> getNGOProjectDashboard(Long ngoId) {
-		NGO ngo = ngoRepository.findById(ngoId).orElseThrow(() -> new RuntimeException("NGO not found"));
+        // ✅ NEW: Get NGO project dashboard
+        @Override
+        public Map<String, Object> getNGOProjectDashboard(Long ngoId) {
+                NGO ngo = ngoRepository.findById(ngoId).orElseThrow(() -> new RuntimeException("NGO not found"));
 
-		List<Project> projects = projectRepository.findByNgoPartnerId(ngoId);
+                List<Project> projects = projectRepository.findByNgoPartnerId(ngoId);
 
-		Map<String, Object> dashboard = new HashMap<>();
-		dashboard.put("ngo", ngo);
-		dashboard.put("totalProjects", projects.size());
-		dashboard.put("activeProjects",
-				projects.stream().filter(p -> "ACTIVE".equalsIgnoreCase(p.getProjectStatus())).count());
-		dashboard.put("completedProjects",
-				projects.stream().filter(p -> "COMPLETED".equalsIgnoreCase(p.getProjectStatus())).count());
-		dashboard.put("totalBudget", projects.stream().mapToDouble(Project::getTotalBudgetFromItems).sum());
-		dashboard.put("avgPerformance",
-				projects.stream().mapToDouble(Project::getCurrentAchievementPercentage).average().orElse(0.0));
-		dashboard.put("projects", projects);
+                Map<String, Object> dashboard = new HashMap<>();
+                dashboard.put("ngo", ngo);
+                dashboard.put("totalProjects", projects.size());
+                dashboard.put("activeProjects",
+                                projects.stream().filter(p -> "ACTIVE".equalsIgnoreCase(p.getProjectStatus())).count());
+                dashboard.put("completedProjects",
+                                projects.stream().filter(p -> "COMPLETED".equalsIgnoreCase(p.getProjectStatus())).count());
+                dashboard.put("totalBudget", projects.stream().mapToDouble(Project::getTotalBudgetFromItems).sum());
+                dashboard.put("avgPerformance",
+                                projects.stream().mapToDouble(Project::getCurrentAchievementPercentage).average().orElse(0.0));
+                dashboard.put("projects", projects);
 
-		return dashboard;
-	}
+                return dashboard;
+        }
 
-	@Override
-	public Map<String, Object> getProjectFinancialPerformance(Long projectId) {
-		Optional<Project> projectOpt = projectRepository.findById(projectId);
-		if (projectOpt.isPresent()) {
-			Project project = projectOpt.get();
-			return project.getFinancialPerformance();
-		}
-		throw new RuntimeException("Project not found with id: " + projectId);
-	}
+        @Override
+        public Map<String, Object> getProjectFinancialPerformance(Long projectId) {
+                Optional<Project> projectOpt = projectRepository.findById(projectId);
+                if (projectOpt.isPresent()) {
+                        Project project = projectOpt.get();
+                        return project.getFinancialPerformance();
+                }
+                throw new RuntimeException("Project not found with id: " + projectId);
+        }
 }

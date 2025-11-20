@@ -15,78 +15,87 @@ import java.util.Optional;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-	// Find project by ID
-	Optional<Project> findById(Long id);
+        // Find project by ID
+        Optional<Project> findById(Long id);
 
-	// Find projects by status
-	List<Project> findByProjectStatus(String projectStatus);
+        // Find only main projects (projects without parent)
+        List<Project> findByParentProjectIsNull();
 
-	// Find projects by theme
-	List<Project> findByProjectTheme(String projectTheme);
+        // Find all projects including subprojects
+        List<Project> findAll();
 
-	
+        // Find subprojects of a specific parent
+        List<Project> findByParentProject(Project parentProject);
 
-	// Find projects by project type (IVDP/Thematic)
-	List<Project> findByProjectType(String projectType);
+        // Find projects by status
+        List<Project> findByProjectStatus(String projectStatus);
 
-	// Search projects by name or description
-	@Query("SELECT p FROM Project p WHERE LOWER(p.projectName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
-			+ "LOWER(p.projectDescription) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
-			+ "LOWER(p.projectTheme) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
-	List<Project> searchProjectsByString(@Param("searchTerm") String searchTerm);
+        // Find projects by theme
+        List<Project> findByProjectTheme(String projectTheme);
 
-	// Get projects by month (created in specific month)
-	@Query("SELECT p FROM Project p WHERE MONTH(p.projectCreatedAt) = :month AND YEAR(p.projectCreatedAt) = :year")
-	List<Project> getProjectsByMonth(@Param("month") int month, @Param("year") int year);
+        
 
-	// Get projects by performance range (based on budget utilization or other
-	// metrics)
-	@Query("SELECT p FROM Project p WHERE " + "CASE WHEN p.budget.totalBudget > 0 THEN "
-			+ "((p.budget.procurementCost + p.budget.trainingCost + p.budget.civilConstructionCost + "
-			+ "p.budget.contingencyMiscellaneousCost + p.budget.humanResourcesCost + p.budget.adminCost + "
-			+ "p.budget.managementAndCoordinationCost + p.budget.governmentConvergenceCost) / p.budget.totalBudget * 100) "
-			+ "ELSE 0 END >= :minPercentage AND " + "CASE WHEN p.budget.totalBudget > 0 THEN "
-			+ "((p.budget.procurementCost + p.budget.trainingCost + p.budget.civilConstructionCost + "
-			+ "p.budget.contingencyMiscellaneousCost + p.budget.humanResourcesCost + p.budget.adminCost + "
-			+ "p.budget.managementAndCoordinationCost + p.budget.governmentConvergenceCost) / p.budget.totalBudget * 100) "
-			+ "ELSE 0 END <= :maxPercentage")
-	List<Project> getProjectsByPerformance(@Param("minPercentage") double minPercentage,
-			@Param("maxPercentage") double maxPercentage);
+        // Find projects by project type (IVDP/Thematic)
+        List<Project> findByProjectType(String projectType);
 
-	// Get all IVDP projects
-	@Query("SELECT p FROM Project p WHERE LOWER(p.projectType) = 'ivdp'")
-	List<Project> getAllIVDPProjects();
+        // Search projects by name or description
+        @Query("SELECT p FROM Project p WHERE LOWER(p.projectName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
+                        + "LOWER(p.projectDescription) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
+                        + "LOWER(p.projectTheme) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+        List<Project> searchProjectsByString(@Param("searchTerm") String searchTerm);
 
-	// Get all thematic projects
-	@Query("SELECT p FROM Project p WHERE LOWER(p.projectType) = 'thematic'")
-	List<Project> getAllThematicProjects();
+        // Get projects by month (created in specific month)
+        @Query("SELECT p FROM Project p WHERE MONTH(p.projectCreatedAt) = :month AND YEAR(p.projectCreatedAt) = :year")
+        List<Project> getProjectsByMonth(@Param("month") int month, @Param("year") int year);
 
-	// Calculate total budget across all projects
-	@Query("SELECT SUM(p.budget.totalBudget) FROM Project p")
-	Double getTotalBudgetAllProjects();
+        // Get projects by performance range (based on budget utilization or other
+        // metrics)
+        @Query("SELECT p FROM Project p WHERE " + "CASE WHEN p.budget.totalBudget > 0 THEN "
+                        + "((p.budget.procurementCost + p.budget.trainingCost + p.budget.civilConstructionCost + "
+                        + "p.budget.contingencyMiscellaneousCost + p.budget.humanResourcesCost + p.budget.adminCost + "
+                        + "p.budget.managementAndCoordinationCost + p.budget.governmentConvergenceCost) / p.budget.totalBudget * 100) "
+                        + "ELSE 0 END >= :minPercentage AND " + "CASE WHEN p.budget.totalBudget > 0 THEN "
+                        + "((p.budget.procurementCost + p.budget.trainingCost + p.budget.civilConstructionCost + "
+                        + "p.budget.contingencyMiscellaneousCost + p.budget.humanResourcesCost + p.budget.adminCost + "
+                        + "p.budget.managementAndCoordinationCost + p.budget.governmentConvergenceCost) / p.budget.totalBudget * 100) "
+                        + "ELSE 0 END <= :maxPercentage")
+        List<Project> getProjectsByPerformance(@Param("minPercentage") double minPercentage,
+                        @Param("maxPercentage") double maxPercentage);
 
-	// Calculate total budget utilized across all projects
-	@Query("SELECT SUM(p.budget.procurementCost + p.budget.trainingCost + p.budget.civilConstructionCost + " +
-		       "p.budget.contingencyMiscellaneousCost + p.budget.humanResourcesCost + p.budget.adminCost + " +
-		       "p.budget.managementAndCoordinationCost + p.budget.governmentConvergenceCost) FROM Project p")
-		Double getTotalBudgetUtilized();
+        // Get all IVDP projects
+        @Query("SELECT p FROM Project p WHERE LOWER(p.projectType) = 'ivdp'")
+        List<Project> getAllIVDPProjects();
+
+        // Get all thematic projects
+        @Query("SELECT p FROM Project p WHERE LOWER(p.projectType) = 'thematic'")
+        List<Project> getAllThematicProjects();
+
+        // Calculate total budget across all projects
+        @Query("SELECT SUM(p.budget.totalBudget) FROM Project p")
+        Double getTotalBudgetAllProjects();
+
+        // Calculate total budget utilized across all projects
+        @Query("SELECT SUM(p.budget.procurementCost + p.budget.trainingCost + p.budget.civilConstructionCost + " +
+                       "p.budget.contingencyMiscellaneousCost + p.budget.humanResourcesCost + p.budget.adminCost + " +
+                       "p.budget.managementAndCoordinationCost + p.budget.governmentConvergenceCost) FROM Project p")
+                Double getTotalBudgetUtilized();
 
 
-	// Get total beneficiaries across all projects
-	@Query("SELECT SUM(CAST(p.expectedBeneficiaries AS INTEGER)) FROM Project p WHERE p.expectedBeneficiaries IS NOT NULL")
-	Integer getTotalBeneficiaries();
+        // Get total beneficiaries across all projects
+        @Query("SELECT SUM(CAST(p.expectedBeneficiaries AS INTEGER)) FROM Project p WHERE p.expectedBeneficiaries IS NOT NULL")
+        Integer getTotalBeneficiaries();
 
-	// Get project analytics - count by status
-	@Query("SELECT p.projectStatus, COUNT(p) FROM Project p GROUP BY p.projectStatus")
-	List<Object[]> getProjectCountByStatus();
+        // Get project analytics - count by status
+        @Query("SELECT p.projectStatus, COUNT(p) FROM Project p GROUP BY p.projectStatus")
+        List<Object[]> getProjectCountByStatus();
 
-	// Get project analytics - count by theme
-	@Query("SELECT p.projectTheme, COUNT(p) FROM Project p GROUP BY p.projectTheme")
-	List<Object[]> getProjectCountByTheme();
-	
-	
-	
-	// ✅ NEW: NGO-based queries
+        // Get project analytics - count by theme
+        @Query("SELECT p.projectTheme, COUNT(p) FROM Project p GROUP BY p.projectTheme")
+        List<Object[]> getProjectCountByTheme();
+        
+        
+        
+        // ✅ NEW: NGO-based queries
     List<Project> findByNgoPartner(NGO ngo);
     List<Project> findByNgoPartnerId(Long ngoId);
     List<Project> findByNgoPartnerNgoName(String ngoName);

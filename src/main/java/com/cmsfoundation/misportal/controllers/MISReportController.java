@@ -38,6 +38,52 @@ public class MISReportController {
         return new ResponseEntity<>(misReportService.getAllMISReports(), HttpStatus.OK);
     }
 
+    // MIS Report List with filtering options
+    @GetMapping("/list")
+    public ResponseEntity<Map<String, Object>> getMISReportList(
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(required = false) Long ngoId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<MISReport> reports;
+            
+            if (projectId != null) {
+                reports = misReportService.getMISReportsByProject(projectId);
+            } else if (ngoId != null) {
+                reports = misReportService.getMISReportsByNGO(ngoId);
+            } else if (status != null && !status.isEmpty()) {
+                ReportStatus reportStatus = ReportStatus.valueOf(status.toUpperCase());
+                reports = misReportService.getReportsByStatus(reportStatus);
+            } else {
+                reports = misReportService.getAllMISReports();
+            }
+            
+            // Simple pagination (in a real app, you'd use Pageable)
+            int start = Math.min(page * size, reports.size());
+            int end = Math.min(start + size, reports.size());
+            List<MISReport> paginatedReports = reports.subList(start, end);
+            
+            response.put("reports", paginatedReports);
+            response.put("currentPage", page);
+            response.put("pageSize", size);
+            response.put("totalElements", reports.size());
+            response.put("totalPages", (int) Math.ceil((double) reports.size() / size));
+            response.put("success", true);
+            
+            return new ResponseEntity<>(response, HttpStatus.OK);
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("error", "Failed to fetch MIS reports: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Get single report
     @GetMapping("/{id}")
     public ResponseEntity<MISReport> getMISReportById(@PathVariable Long id) {

@@ -16,6 +16,7 @@ public interface ProjectService {
     Project createProject(Project project);
     Project createProjectWithDetails(ProjectCreateRequest request);
     List<Project> getAllProjects();
+    List<Project> getAllProjectsWithSubprojects();
     Optional<Project> getProjectById(Long id);
     Project updateProject(Long id, Project project);
     Project updateProjectWithDetails(Long id, ProjectCreateRequest request);
@@ -45,14 +46,14 @@ public interface ProjectService {
     List<Project> getAllThematicProjects();
     Map<String, Long> getProjectCountByStatus();
     Map<String, Long> getProjectCountByTheme();
-	List<Project> getProjectsByNGOId(Long ngoId);
-	List<Project> getProjectsByNGOName(String ngoName);
-	List<Project> getProjectsByManager(Long userId);
-	Map<String, Object> getProjectNGOPerformance(Long projectId);
-	Map<String, Object> getNGOProjectDashboard(Long ngoId);
-	Project assignNGOToProject(Long projectId, Long ngoId);
-	Project createProjectWithNGO(ProjectCreateRequest request);
-	Map<String, Object> getProjectFinancialPerformance(Long projectId);
-	
-	
+        List<Project> getProjectsByNGOId(Long ngoId);
+        List<Project> getProjectsByNGOName(String ngoName);
+        List<Project> getProjectsByManager(Long userId);
+        Map<String, Object> getProjectNGOPerformance(Long projectId);
+        Map<String, Object> getNGOProjectDashboard(Long ngoId);
+        Project assignNGOToProject(Long projectId, Long ngoId);
+        Project createProjectWithNGO(ProjectCreateRequest request);
+        Map<String, Object> getProjectFinancialPerformance(Long projectId);
+        
+        
 }
